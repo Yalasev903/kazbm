@@ -1,0 +1,168 @@
+/* Image Optimization CSS */
+
+/* Lazy loading placeholder styles */
+img[data-lazy] {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    min-height: 150px;
+    object-fit: cover;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Optimize image rendering */
+img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Slider optimizations */
+.slick-slider {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+.slick-slide {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Preload critical images */
+.hero-image,
+.banner img,
+.block1 img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* WebP support detection */
+.webp .no-webp-fallback {
+    display: none;
+}
+
+.no-webp .webp-image {
+    display: none;
+}
+
+/* Responsive image containers */
+.image-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.image-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: opacity 0.3s ease;
+}
+
+/* Loading state */
+.image-loading {
+    opacity: 0.7;
+}
+
+.image-loaded {
+    opacity: 1;
+}
+
+/* Optimize slider performance */
+.card_slider,
+.block2 .slider,
+.productPage .block1 .banner {
+    contain: layout style paint;
+}
+
+/* Reduce paint operations */
+.slick-track {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Optimize background images */
+.fon {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    will-change: opacity;
+}
+
+/* Fancybox integration styles */
+.slider-item {
+  position: relative;
+}
+
+.slider-item a[data-fancybox] {
+  display: block;
+  position: relative;
+  z-index: 10;
+}
+
+.slider-item .product-link {
+  pointer-events: auto;
+}
+
+/* Prevent slider navigation when clicking on fancybox links */
+.slick-slider .slider-item a[data-fancybox]:hover {
+  cursor: zoom-in;
+}
+
+.productPage .banner a[data-fancybox],
+.productPage .slider a[data-fancybox] {
+  display: block;
+  cursor: zoom-in;
+}
+
+.productPage .banner a[data-fancybox]:hover img,
+.productPage .slider a[data-fancybox]:hover img {
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    img[data-lazy] {
+        min-height: 120px;
+    }
+    
+    .slick-slider {
+        transform: none;
+    }
+    
+    .slick-slide {
+        transform: none;
+    }
+    
+    .slider-item {
+        transform: translateZ(0);
+    }
+    
+    .lazy-placeholder {
+        min-height: 150px;
+    }
+    
+    .slider-item .product-link {
+        height: 40%;
+    }
+}
+
+/* Intersection Observer fallback */
+.lazy-load-observer {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.lazy-load-observer.loaded {
+    opacity: 1;
+}
