@@ -9,7 +9,19 @@ use Spatie\Translatable\HasTranslations;
 class City extends Model
 {
     use HasFactory, HasTranslations;
-    protected $fillable = ["name", "delivery_cost", "region"];
-    public $translatable = ['name'];
+
+        protected $fillable = [
+        "name",
+        "slug",
+        "delivery_cost",
+        "region",
+        "is_default",
+        "seo_title",
+        "meta_description",
+        "meta_keywords",
+        "h1"
+    ];
+
+    public $translatable = ['name', 'seo_title', 'meta_description', 'meta_keywords', 'h1'];
 
 }

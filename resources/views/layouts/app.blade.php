@@ -6,13 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@if(strlen($__env->yieldContent('seo_title')) > 2) @yield('seo_title') @else @yield('page_title') @endif</title>
+    {{-- <title>@if(strlen($__env->yieldContent('seo_title')) > 2) @yield('seo_title') @else @yield('page_title') @endif</title>
     <meta name="description" content="@yield('meta_description')">
     <meta name="keywords" content="@yield('meta_keywords')">
     <meta name="title" content="@yield('seo_title')">
     @if(View::hasSection('seo'))
         @yield('seo')
-    @endif
+    @endif --}}
+    <title>{{ $seoTitle ?? ($page->seo_title ?? config('app.name')) }}</title>
+    <meta name="description" content="{{ $seoDescription ?? ($page->meta_description ?? '') }}">
+    <meta name="keywords" content="{{ $seoKeywords ?? ($page->meta_keywords ?? '') }}">
+    <link rel="canonical" href="{{ url()->current() }}" />
+
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
     (function(m,e,t,r,i,k,a){
@@ -29,7 +34,7 @@
     @php($favicon = $generalSettings->getRealFormat('favicon'))
     <link rel="preload" as="image" href="{{$favicon}}">
     <link rel="shortcut icon" type="image/svg" href="{{$favicon}}">
-    
+
     {{-- Preload critical hero images --}}
     @php($heroSettings = app(\App\Filament\Settings\HeroSettings::class))
     @if($heroSettings->title && $heroSettings->photo)
@@ -38,7 +43,7 @@
         @endif
         <link rel="preload" as="image" href="{{ $heroSettings->getRealFormat('photo') }}">
     @endif
-    
+
     {{-- Preload critical background SVGs --}}
     <link rel="preload" as="image" href="{{ asset('images/icons/hpb2_bg.svg') }}" type="image/svg+xml">
     <link rel="preload" as="image" href="{{ asset('images/icons/hpb5_bg.svg') }}" type="image/svg+xml">

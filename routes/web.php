@@ -26,20 +26,73 @@ use Illuminate\Support\Facades\Session;
 
 use Illuminate\Support\Facades\Http;
 
+Route::get('/debug-route', function() {
+    $currentCity = app()->has('currentCity') ? app()->get('currentCity') : null;
+    $route = request()->route();
+
+    return response()->json([
+        'current_city' => $currentCity ? $currentCity->toArray() : null,
+        'session_city' => session('current_city_slug'),
+        'route_parameters' => $route ? $route->parameters() : [],
+        'request_path' => request()->path(),
+        'request_url' => request()->url(),
+        'all_cities' => \App\Models\City::all()->pluck('slug', 'id')
+    ]);
+});
+
 
 Route::get('/set-lang/{lang}', function ($lang) {
     Session::put('locale', $lang);
     return redirect()->back();
 })->name("lang.change");
 
+Route::get('/', function() {
+    $defaultCity = \App\Models\City::where('is_default', true)->first();
+    return redirect("/{$defaultCity->slug}");
+});
 
-Route::controller(SiteController::class)
-    ->group(function () {
-        Route::get('/{page?}','getPage')->name('pages.get');
-        Route::get('/articles/{slug}','getArticle')->name('article.show');
-        Route::get('/catalog/{slug}','getCategory')->name('category.show');
-        Route::get('/catalog/{category}/{slug}','getProduct')->name('product.show');
-    });
+Route::group(['prefix' => '{city}', 'middleware' => ['detect.city']], function () {
+
+    // Главная
+    Route::get('/', function($city){
+        return app(SiteController::class)->getPage(request(), '/'); // slug = '/' для home
+    })->name('home.city');
+
+    // Статические страницы
+    Route::get('/about', fn($city) => app(SiteController::class)->getPage(request(), 'about'))->name('about.city');
+    Route::get('/contacts', fn($city) => app(SiteController::class)->getPage(request(), 'contacts'))->name('contacts.city');
+
+    // Статьи
+    Route::get('/articles/{slug}', [SiteController::class, 'getArticle'])->name('article.city.show');
+
+    // Категории
+    Route::get('/catalog/{slug}', [SiteController::class, 'getCategory'])->name('category.city.show');
+
+    // Товары
+    Route::get('/catalog/{category}/{slug}', [SiteController::class, 'getProduct'])->name('product.city.show');
+
+    // Catch-all для остальных страниц
+    Route::get('/{slug}', function($city, $slug){
+        return app(SiteController::class)->getPage(request(), $slug);
+    })->where('slug', '.*')->name('pages.city.get');
+});
+
+// Редирект с корня на дефолтный город
+Route::get('/', function(){
+    $defaultCity = \App\Models\City::where('is_default', true)->first();
+    if (!$defaultCity) abort(404, 'Default city not found');
+    return redirect("/{$defaultCity->slug}");
+});
+
+// legacy маршруты только для fallback (если нет city)
+Route::controller(SiteController::class)->group(function () {
+    Route::get('/{page?}', 'getPage')
+         ->where('page', '.*')
+         ->name('pages.get');
+    Route::get('/articles/{slug}', 'getArticle')->name('article.show');
+    Route::get('/catalog/{slug}', 'getCategory')->name('category.show');
+    Route::get('/catalog/{category}/{slug}', 'getProduct')->name('product.show');
+});
 
 
 Route::get('/forgot-password/{token}', [AuthController::class, 'forgot'])->name('user.forgot_password');
@@ -107,7 +160,25 @@ Route::prefix('ajax')
         # send Application
         Route::post('/application/call',[FeedbackController::class, 'call'])->name('application.call');
         Route::post('/application/consultation',[FeedbackController::class, 'consultation'])->name('application.consult');
-
     });
+
+
+            // Добавьте это в конец файла routes/web.php
+// Route::get('/test-city/{city?}', function ($city = null) {
+//     $currentCity = app('currentCity');
+//     return response()->json([
+//         'city_from_url' => $city,
+//         'current_city' => $currentCity ? $currentCity->toArray() : null,
+//         'session_city' => session('current_city_slug'),
+//         'all_cities' => \App\Models\City::all()->toArray()
+//     ]);
+// })->middleware('detect.city');
+
+// Добавьте в routes/web.php для тестирования
+// Route::get('/test/{city?}', function ($city = null) {
+//     return "Город из URL: " . ($city ?? 'не указан');
+// });
+
+
 
 
