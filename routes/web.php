@@ -41,6 +41,17 @@ Route::get('/debug-route', function() {
 });
 
 
+
+Route::controller(ProfileController::class)
+    ->prefix('profile')
+    ->name('profile.')
+    ->middleware(UserAuthenticate::class)
+    ->group(function () {
+        Route::get('/index','index')->name('index');
+        Route::get('/history','history')->name('history');
+        Route::post('/settings','settings')->name('settings');
+    });
+
 Route::get('/set-lang/{lang}', function ($lang) {
     Session::put('locale', $lang);
     return redirect()->back();
@@ -87,6 +98,7 @@ Route::get('/', function(){
 // legacy маршруты только для fallback (если нет city)
 Route::controller(SiteController::class)->group(function () {
     Route::get('/{page?}', 'getPage')
+        ->where('page', '^(?!profile/).*')
          ->where('page', '.*')
          ->name('pages.get');
     Route::get('/articles/{slug}', 'getArticle')->name('article.show');
@@ -98,15 +110,6 @@ Route::controller(SiteController::class)->group(function () {
 Route::get('/forgot-password/{token}', [AuthController::class, 'forgot'])->name('user.forgot_password');
 Route::get('/order/invoice/{id_hash}', [OrderController::class, 'invoice'])->name('order.invoice.show');
 
-Route::controller(ProfileController::class)
-    ->prefix('profile')
-    ->name('profile.')
-    ->middleware(UserAuthenticate::class)
-    ->group(function () {
-        Route::get('/index','index')->name('index');
-        Route::get('/history','history')->name('history');
-        Route::post('/settings','settings')->name('settings');
-    });
 
 Route::prefix('ajax')
     ->name('ajax.')
