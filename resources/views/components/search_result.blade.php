@@ -7,6 +7,6 @@
         @endforeach
         <a class="all" href="{{ route('pages.get', 'search?query='. $search) }}">{{__("Показать все результаты")}}</a>
     @else
-        <div>{{__("Нет данны")}}х</div>
+        <div>{{__("Нет данных")}}х</div>
     @endif
 </div>

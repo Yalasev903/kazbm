@@ -166,25 +166,25 @@
                             <div class="btn right" onclick="basketAt(this)" data-id="{{ $product->id }}" style="display: {{ $product->hasCart() ? 'none' : 'flex' }}">
                                 {{__("Добавить в корзину")}}
                             </div>
-		
+
                             <div class="btn right goBasket" style="display: {{ $product->hasCart() ? 'flex' : 'none' }}">
                                 <a class="btn" href="{{ route('pages.get', 'cart') }}">{{__("Перейти в корзину")}}</a>
                             </div>
 												@if ($product->brick_texture_file)
 <div class="btn" style="display: flex; align-items: center; justify-content: center; padding: 4px 0;">
-    <a href="{{ asset('storage/' . $product->brick_texture_file) }}" 
+    <a href="{{ asset('storage/' . $product->brick_texture_file) }}"
        download
        style="
-           display: flex; 
-           align-items: center; 
-           justify-content: center; 
-           padding: 8px 16px; 
-           border-radius: 4px; 
-           color: white; 
-           font-size: 18px; 
-           font-style: normal; 
-           font-weight: 600; 
-           line-height: normal; 
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           padding: 8px 16px;
+           border-radius: 4px;
+           color: white;
+           font-size: 18px;
+           font-style: normal;
+           font-weight: 600;
+           line-height: normal;
            text-decoration: none;
        ">
         Скачать текстуру кирпича

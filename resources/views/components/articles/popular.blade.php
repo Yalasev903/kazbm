@@ -31,7 +31,11 @@
                         <div class="item_title">{{ $article->title }}</div>
                         <div class="item_date">{{ $article->getPublishedAt() }}</div>
                         <div class="item_desc">{{ $article->getShortDesc(47) }}</div>
-                        <a class="item_link" href="{{ route('article.show', $article->slug) }}">{{__("Подробнее")}}</a>
+                        <a class="item_link" href="{{ route('article.city.show', [
+                            'city' => app()->get('currentCity')->slug ?? session('current_city_slug'),
+                            'slug' => $article->slug
+                        ]) }}">{{__("Подробнее")}}
+                        </a>
                     </div>
                 </div>
             @endforeach

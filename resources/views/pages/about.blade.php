@@ -57,7 +57,11 @@
                         <div class="right">
                             <div class="title">{{__("Наша Продукция")}}</div>
                             <div class="desc">{{__("Гиперпрессованный облицовочный кирпич от ТОО “KAZBM” — это высококачественный, долговечный и эстетически привлекательный строительный материал, идеально подходящий для современного строительства.")}}</div>
-                            <a class="btn" href="{{ route('pages.get', 'our-products') }}">{{__("Подробнее")}}</a>
+                            <a class="btn" href="{{ route('pages.city.get', [
+                                'city' => app()->get('currentCity')->slug ?? session('current_city_slug'),
+                                'slug' => 'our-products'
+                            ]) }}">{{__("Подробнее")}}
+                            </a>
                         </div>
                     </div>
                 @endif

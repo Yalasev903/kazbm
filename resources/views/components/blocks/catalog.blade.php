@@ -49,8 +49,12 @@
                                 </div>
                             </div>
                             <div class="item_row">
-                                <a class="btn" href="{{ route('product.show', ['category' => $product->category->slug, 'slug' => $product->slug]) }}">
-                                    {{__("На страницу товара")}}
+                                <a class="btn" href="{{ route('product.city.show', [
+                                    'city' => app()->get('currentCity')->slug ?? session('current_city_slug'),
+                                    'category' => $product->category->slug,
+                                    'slug' => $product->slug
+                                ]) }}">
+                                    {{ __("На страницу товара") }}
                                 </a>
                             </div>
                         </div>

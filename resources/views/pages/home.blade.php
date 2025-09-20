@@ -61,7 +61,11 @@
                             <source srcset="{{ asset('images/hpb5_3.webp') }}" type="image/pjp2">
                             <img src="{{ asset('images/hpb5_3.png') }}" alt="hpb5_3 image" loading="lazy">
                         </picture>
-                        <a class="btn" href="{{ route('pages.get', 'about') }}">{{__("Узнать больше")}}</a>
+                        <a class="btn" href="{{ route('pages.city.get', [
+                            'city' => app()->get('currentCity')->slug ?? session('current_city_slug'),
+                            'slug' => 'about'
+                        ]) }}">{{__("Узнать больше")}}/
+                        </a>
                     </div>
                 </div>
             </div>

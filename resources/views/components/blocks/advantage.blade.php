@@ -29,7 +29,12 @@
                         <div class="desc">{{ $item['desc'] }}</div>
                     </div>
                 @endforeach
-                <a href="/our-products" class="btn">{{__("Подробнее")}}</a>
+                <a href="{{ route('pages.city.get', [
+                    'city' => app()->get('currentCity')->slug ?? session('current_city_slug'),
+                    'slug' => 'our-products'
+                ]) }}" class="btn">
+                    {{ __("Подробнее") }}
+                </a>
             </div>
         </div>
     </div>

@@ -76,7 +76,12 @@
                     <div class="title">{{ __("Итоговая стоимость, тенге:") }}</div>
                     <div class="num cost kirpichAllCost">123 456 12</div>
                 </div>
-                <a class="btn" href="{{ route('pages.get', 'calculator') }}">{{ __("Перейти в расширенную версию") }}</a>
+                <a class="btn" href="{{ route('pages.city.get', [
+                    'city' => app()->get('currentCity')->slug ?? session('current_city_slug'),
+                    'slug' => 'calculator'
+                ]) }}">
+                    {{ __("Перейти в расширенную версию") }}
+                </a>
             </div>
         </div>
     </div>

@@ -179,38 +179,47 @@ private function buildSeoForPage($city, $type, $entity)
 
 private function buildSeoForProduct($city, $product)
 {
-    // SEO поля города
+    // Получаем SEO-поля города с поддержкой переводов
     $citySeoTitle = $city->getTranslation('seo_title', 'ru') ?? $city->seo_title ?? '';
     $cityMetaDescription = $city->getTranslation('meta_description', 'ru') ?? $city->meta_description ?? '';
     $cityMetaKeywords = $city->getTranslation('meta_keywords', 'ru') ?? $city->meta_keywords ?? '';
     $cityH1 = $city->getTranslation('h1', 'ru') ?? $city->h1 ?? '';
 
-    // product_city_seos
+    // Проверяем переопределения для конкретного продукта в конкретном городе
     $override = \DB::table('product_city_seos')
         ->where('product_id', $product->id)
         ->where('city_id', $city->id)
         ->first();
 
-    if ($override && $override->seo_title) {
-        $seoTitle = $override->seo_title;
-        $metaDescription = $override->meta_description ?? $cityMetaDescription;
+    if ($override) {
+        $seoTitle = $override->seo_title ?? ($product->seo_title ?? $product->title . ' в ' . $citySeoTitle);
+        $metaDescription = $override->meta_description ?? ($product->meta_description ?? $cityMetaDescription);
         $h1 = $override->h1 ?? ($product->title . ' в ' . $citySeoTitle);
-        $seoKeywords = $override->meta_keywords ?? $cityMetaKeywords;
+        $seoKeywords = $override->meta_keywords ?? ($product->meta_keywords ?? $cityMetaKeywords);
     } else {
-        // city_page_seos для 'product'
+        // Проверяем city_page_seos для страницы 'product'
         $cityPageSeo = \App\Models\CityPageSeo::where('city_id', $city->id)
-                        ->where('page_slug', 'product')
-                        ->first();
+            ->where('page_slug', 'product')
+            ->first();
 
-        if ($cityPageSeo && $cityPageSeo->seo_title) {
-            $seoTitle = $this->renderTemplate($cityPageSeo->seo_title, $product, $citySeoTitle);
-            $metaDescription = $this->renderTemplate($cityPageSeo->meta_description, $product, $cityMetaDescription);
-            $h1 = $this->renderTemplate($cityPageSeo->h1, $product, $cityH1);
-            $seoKeywords = $cityPageSeo->meta_keywords ?? $cityMetaKeywords;
+        if ($cityPageSeo) {
+            $seoTitle = $cityPageSeo->seo_title
+                ? $this->renderTemplate($cityPageSeo->seo_title, $product, $citySeoTitle)
+                : ($product->seo_title ?? $product->title . ' в ' . $citySeoTitle);
+
+            $metaDescription = $cityPageSeo->meta_description
+                ? $this->renderTemplate($cityPageSeo->meta_description, $product, $cityMetaDescription)
+                : ($product->meta_description ?? $cityMetaDescription);
+
+            $h1 = $cityPageSeo->h1
+                ? $this->renderTemplate($cityPageSeo->h1, $product, $cityH1)
+                : ($product->title . ' в ' . $citySeoTitle);
+
+            $seoKeywords = $cityPageSeo->meta_keywords ?? ($product->meta_keywords ?? $cityMetaKeywords);
         } else {
-            // fallback product seo + город
-            $base = $product->seo_title ?? $product->title;
-            $seoTitle = $base . ' в ' . $citySeoTitle;
+            // Финальный fallback: продукт + город
+            $baseTitle = $product->seo_title ?? $product->title;
+            $seoTitle = $baseTitle . ' в ' . $citySeoTitle;
             $metaDescription = $product->meta_description ?? $cityMetaDescription;
             $h1 = $product->title . ' в ' . $citySeoTitle;
             $seoKeywords = $product->meta_keywords ?? $cityMetaKeywords;
@@ -224,6 +233,7 @@ private function buildSeoForProduct($city, $product)
         'h1' => $h1,
     ];
 }
+
 
 
     /**
