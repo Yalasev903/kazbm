@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CityResource\Pages;
-use App\Filament\Resources\CityResource\RelationManagers;
 use App\Models\City;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -19,28 +18,67 @@ class CityResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-map-pin';
     protected static ?string $pluralLabel = 'Города';
-
     protected static ?string $modelLabel = 'город';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name.ru')
-                    ->label("Название города (ru)")
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('name.kk')
-                    ->label("Название города (kk)")
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('region')
-                    ->label("Регион (если есть)")
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('delivery_cost')
-                    ->label("Стоимость доставки")
-                    ->numeric()
-                    ->required(),
+                Forms\Components\Tabs::make('Город')
+                    ->tabs([
+                        Forms\Components\Tabs\Tab::make('Основная информация')
+                            ->schema([
+                                Forms\Components\TextInput::make('name.ru')
+                                    ->label("Название города (ru)")
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('name.kk')
+                                    ->label("Название города (kk)")
+                                    ->required()
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('slug')
+                                    ->label("Slug (латинскими буквами)")
+                                    ->required()
+                                    ->unique(ignoreRecord: true)
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('region')
+                                    ->label("Регион (если есть)")
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('delivery_cost')
+                                    ->label("Стоимость доставки")
+                                    ->numeric()
+                                    ->required(),
+                                Forms\Components\Toggle::make('is_default')
+                                    ->label("Город по умолчанию"),
+                            ]),
+                        Forms\Components\Tabs\Tab::make('SEO настройки')
+                            ->schema([
+                                Forms\Components\TextInput::make('seo_title.ru')
+                                    ->label("SEO Title (ru)")
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('seo_title.kk')
+                                    ->label("SEO Title (kk)")
+                                    ->maxLength(255),
+                                Forms\Components\Textarea::make('meta_description.ru')
+                                    ->label("Meta Description (ru)")
+                                    ->rows(3),
+                                Forms\Components\Textarea::make('meta_description.kk')
+                                    ->label("Meta Description (kk)")
+                                    ->rows(3),
+                                Forms\Components\Textarea::make('meta_keywords.ru')
+                                    ->label("Meta Keywords (ru)")
+                                    ->rows(2),
+                                Forms\Components\Textarea::make('meta_keywords.kk')
+                                    ->label("Meta Keywords (kk)")
+                                    ->rows(2),
+                                Forms\Components\TextInput::make('h1.ru')
+                                    ->label("H1 (ru)")
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('h1.kk')
+                                    ->label("H1 (kk)")
+                                    ->maxLength(255),
+                            ]),
+                    ])
             ]);
     }
 
@@ -52,14 +90,19 @@ class CityResource extends Resource
                     ->label('Название города')
                     ->sortable()
                     ->searchable(),
-
+                Tables\Columns\TextColumn::make('slug')
+                    ->label('Slug')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('region')
                     ->label('Регион')
                     ->sortable(),
-
                 Tables\Columns\TextColumn::make('delivery_cost')
                     ->label('Стоимость доставки')
                     ->sortable(),
+                Tables\Columns\IconColumn::make('is_default')
+                    ->label('По умолчанию')
+                    ->boolean(),
             ])
             ->filters([
                 //
@@ -67,7 +110,7 @@ class CityResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-                ])
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
