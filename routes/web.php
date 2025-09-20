@@ -82,6 +82,11 @@ Route::group(['prefix' => '{city}', 'middleware' => ['detect.city']], function (
     // Товары
     Route::get('/catalog/{category}/{slug}', [SiteController::class, 'getProduct'])->name('product.city.show');
 
+    // Калькулятор
+    Route::get('/calculator', function($city){
+    return app(SiteController::class)->getPage(request(), 'calculator');
+})->name('calculator.city');
+
     // Catch-all для остальных страниц
     Route::get('/{slug}', function($city, $slug){
         return app(SiteController::class)->getPage(request(), $slug);

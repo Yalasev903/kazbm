@@ -13,7 +13,8 @@
     @if(View::hasSection('seo'))
         @yield('seo')
     @endif --}}
-    <title>{{ $seoTitle ?? ($page->seo_title ?? config('app.name')) }}</title>
+    {{-- <title>{{ $seoTitle ?? ($page->seo_title ?? config('app.name')) }}</title> --}}
+    <title>{{ $seoTitle ?? config('app.name') }}</title>
     <meta name="description" content="{{ $seoDescription ?? ($page->meta_description ?? '') }}">
     <meta name="keywords" content="{{ $seoKeywords ?? ($page->meta_keywords ?? '') }}">
     <link rel="canonical" href="{{ url()->current() }}" />

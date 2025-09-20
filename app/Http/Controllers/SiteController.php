@@ -138,78 +138,93 @@ class SiteController extends Controller
         }
     }
 
-    private function buildSeoForPage($city, $type, $entity)
-    {
-        // $type: 'page', 'category', 'article', ...
-        // $entity: model (Page, Category, Article)
-        $pageSlug = ($type == 'page') ? $entity->slug : $type; // или другое логическое определение
+private function buildSeoForPage($city, $type, $entity)
+{
+    // $type: 'page', 'category', 'article', ...
+    // $entity: модель (Page, Category, Article)
+    $pageSlug = ($type === 'page') ? $entity->slug : $type;
 
-        // 1. попытка взять override product_city_seos / city_page_seos
+    // SEO из city_page_seos, если есть
+    $cityPageSeo = \App\Models\CityPageSeo::where('city_id', $city->id)
+                    ->where('page_slug', $pageSlug)
+                    ->first();
+
+    // SEO поля города
+    $citySeoTitle = $city->getTranslation('seo_title', 'ru') ?? $city->seo_title ?? '';
+    $cityMetaDescription = $city->getTranslation('meta_description', 'ru') ?? $city->meta_description ?? '';
+    $cityMetaKeywords = $city->getTranslation('meta_keywords', 'ru') ?? $city->meta_keywords ?? '';
+    $cityH1 = $city->getTranslation('h1', 'ru') ?? $city->h1 ?? '';
+
+    if ($cityPageSeo) {
+        $seoTitle = $this->renderTemplate($cityPageSeo->seo_title, $entity, $citySeoTitle);
+        $metaDescription = $this->renderTemplate($cityPageSeo->meta_description, $entity, $cityMetaDescription);
+        $h1 = $this->renderTemplate($cityPageSeo->h1, $entity, $cityH1);
+        $seoKeywords = $cityPageSeo->meta_keywords ?? $cityMetaKeywords;
+    } else {
+        // fallback: entity seo + append city
+        $baseTitle = $entity->seo_title ?? ($entity->title ?? '');
+        $seoTitle = $baseTitle ? ($baseTitle . ' в ' . $citySeoTitle) : config('app.name');
+        $metaDescription = $entity->meta_description ?? $cityMetaDescription;
+        $seoKeywords = $entity->meta_keywords ?? $cityMetaKeywords;
+        $h1 = $entity->title ?? $cityH1;
+    }
+
+    return [
+        'seoTitle' => $seoTitle,
+        'seoDescription' => $metaDescription,
+        'seoKeywords' => $seoKeywords,
+        'h1' => $h1,
+    ];
+}
+
+private function buildSeoForProduct($city, $product)
+{
+    // SEO поля города
+    $citySeoTitle = $city->getTranslation('seo_title', 'ru') ?? $city->seo_title ?? '';
+    $cityMetaDescription = $city->getTranslation('meta_description', 'ru') ?? $city->meta_description ?? '';
+    $cityMetaKeywords = $city->getTranslation('meta_keywords', 'ru') ?? $city->meta_keywords ?? '';
+    $cityH1 = $city->getTranslation('h1', 'ru') ?? $city->h1 ?? '';
+
+    // product_city_seos
+    $override = \DB::table('product_city_seos')
+        ->where('product_id', $product->id)
+        ->where('city_id', $city->id)
+        ->first();
+
+    if ($override && $override->seo_title) {
+        $seoTitle = $override->seo_title;
+        $metaDescription = $override->meta_description ?? $cityMetaDescription;
+        $h1 = $override->h1 ?? ($product->title . ' в ' . $citySeoTitle);
+        $seoKeywords = $override->meta_keywords ?? $cityMetaKeywords;
+    } else {
+        // city_page_seos для 'product'
         $cityPageSeo = \App\Models\CityPageSeo::where('city_id', $city->id)
-                        ->where('page_slug', $pageSlug)
+                        ->where('page_slug', 'product')
                         ->first();
 
-        $cityName = $city->getTranslation('name', 'ru') ?? $city->name;
-
-        if ($cityPageSeo) {
-            $seoTitle = $this->renderTemplate($cityPageSeo->seo_title, $entity, $cityName);
-            $metaDescription = $this->renderTemplate($cityPageSeo->meta_description, $entity, $cityName);
-            $h1 = $this->renderTemplate($cityPageSeo->h1, $entity, $cityName);
+        if ($cityPageSeo && $cityPageSeo->seo_title) {
+            $seoTitle = $this->renderTemplate($cityPageSeo->seo_title, $product, $citySeoTitle);
+            $metaDescription = $this->renderTemplate($cityPageSeo->meta_description, $product, $cityMetaDescription);
+            $h1 = $this->renderTemplate($cityPageSeo->h1, $product, $cityH1);
+            $seoKeywords = $cityPageSeo->meta_keywords ?? $cityMetaKeywords;
         } else {
-            // fallback: entity seo + append city
-            $baseTitle = $entity->seo_title ?? ($entity->title ?? $entity->name ?? '');
-            $seoTitle = $baseTitle ? ($baseTitle . ' в ' . $cityName) : config('app.name');
-            $metaDescription = $entity->meta_description ?? '';
-            $h1 = $entity->title ?? ($entity->name ?? '');
+            // fallback product seo + город
+            $base = $product->seo_title ?? $product->title;
+            $seoTitle = $base . ' в ' . $citySeoTitle;
+            $metaDescription = $product->meta_description ?? $cityMetaDescription;
+            $h1 = $product->title . ' в ' . $citySeoTitle;
+            $seoKeywords = $product->meta_keywords ?? $cityMetaKeywords;
         }
-
-        return [
-            'seoTitle' => $seoTitle,
-            'seoDescription' => $metaDescription,
-            'seoKeywords' => $cityPageSeo->meta_keywords ?? ($entity->meta_keywords ?? ''),
-            'h1' => $h1,
-        ];
     }
 
-    private function buildSeoForProduct($city, $product)
-    {
-        $cityName = $city->getTranslation('name', 'ru') ?? $city->name;
+    return [
+        'seoTitle' => $seoTitle,
+        'seoDescription' => $metaDescription,
+        'seoKeywords' => $seoKeywords,
+        'h1' => $h1,
+    ];
+}
 
-        // 1. product_city_seos
-        $override = \DB::table('product_city_seos')
-            ->where('product_id', $product->id)
-            ->where('city_id', $city->id)
-            ->first();
-
-        if ($override && $override->seo_title) {
-            $seoTitle = $override->seo_title;
-            $metaDescription = $override->meta_description ?? '';
-            $h1 = $override->h1 ?? ($product->title . ' в ' . $cityName);
-        } else {
-            // 2. city page template for 'product'
-            $cityPageSeo = \App\Models\CityPageSeo::where('city_id', $city->id)
-                            ->where('page_slug', 'product')
-                            ->first();
-            if ($cityPageSeo && $cityPageSeo->seo_title) {
-                $seoTitle = $this->renderTemplate($cityPageSeo->seo_title, $product, $cityName);
-                $metaDescription = $this->renderTemplate($cityPageSeo->meta_description, $product, $cityName);
-                $h1 = $this->renderTemplate($cityPageSeo->h1, $product, $cityName);
-            } else {
-                // 3. fallback product seo + city
-                $base = $product->seo_title ?? $product->title;
-                $seoTitle = $base . ' в ' . $cityName;
-                $metaDescription = $product->meta_description ?? '';
-                $h1 = $product->title . ' в ' . $cityName;
-            }
-        }
-
-        return [
-            'seoTitle' => $seoTitle,
-            'seoDescription' => $metaDescription,
-            'seoKeywords' => $override->meta_keywords ?? $product->meta_keywords ?? '',
-            'h1' => $h1,
-        ];
-    }
 
     /**
      * Простая подстановка плейсхолдеров:
