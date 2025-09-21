@@ -23,13 +23,13 @@
                                 <img data-lazy="{{ \App\Helpers\Common::getImage($img) }}" alt="slider image{{$k}}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect width='100%25' height='100%25' fill='%23f0f0f0'/%3E%3C/svg%3E">
                             </picture>
                         </a>
-                        <a href="{{ route('product.show', ['category' => $product->category->slug, 'slug' => $product->slug]) }}" class="product-link" style="position: absolute; bottom: 0; left: 0; right: 0; height: 30%; z-index: 2; background: transparent;"></a>
+                        <a href="{{ city_route('product.city.show', ['category' => $product->category->slug, 'slug' => $product->slug]) }}" class="product-link" style="position: absolute; bottom: 0; left: 0; right: 0; height: 30%; z-index: 2; background: transparent;"></a>
                     </div>
                 @endforeach
             </div>
             <div class="block">
                 <div class="top">
-                    <a class="block_title" href="{{ route('product.show', ['category' => $product->category->slug, 'slug' => $product->slug]) }}">
+                     <a class="block_title" href="{{ city_route('product.city.show', ['category' => $product->category->slug, 'slug' => $product->slug]) }}">
                         <p>{{ $product->title }}</p>
                     </a>
                     <div class="status">
@@ -55,7 +55,7 @@
                     @endif
                     @if ($product->stock > 0)
                         <div class="btn_row have few {{ !$product->hasCart() ? 'active' : ''}}">
-                            <a class="btn" href="{{ route('product.show', ['category' => $product->category->slug, 'slug' => $product->slug]) }}">
+                            <a class="btn" href="{{ city_route('product.city.show', ['category' => $product->category->slug, 'slug' => $product->slug]) }}">
                                 {{ $product->price }}&nbsp;
                                 <div class="currency">₸</div>
                             </a>
@@ -75,7 +75,7 @@
                         </div>
                     @endif
                     <div class="btn_row goBasket {{ $product->hasCart() ? 'active' : '' }}">
-                        <a class="btn" href="{{ route('pages.get', 'cart') }}">{{__("Перейти в корзину")}}</a>
+                        <a class="btn" href="{{ city_route('pages.city.get', ['slug' => 'cart']) }}">{{__("Перейти в корзину")}}</a>
                     </div>
                 </div>
             </div>

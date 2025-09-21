@@ -7,7 +7,7 @@
             <div class="items">
                 @foreach($categories as $slug => $name)
                     <a class="item {{ isset($category) && $category->slug == $slug ? 'active' : '' }}"
-                       href="{{ route('category.show', $slug) }}">{{ __($name) }}</a>
+                       href="{{ city_route('category.city.show', ['slug' => $slug]) }}">{{ __($name) }}</a>
                 @endforeach
             </div>
         @endif

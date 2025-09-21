@@ -113,8 +113,13 @@
                             <div class="currency">₸</div>
                         </div>
                     </div>
-                    <a href="{{ route('pages.get', 'checkout') }}" class="btn btn_red">{{__("Оформить заказ")}}</a>
-                    <a href="{{ route('pages.get', 'catalog') }}" class="btn btn_white">{{__("Продолжить покупки")}}</a>
+                    <a href="{{ city_route('pages.city.get', ['slug' => 'checkout']) }}" class="btn btn_red">
+                        {{ __("Оформить заказ") }}
+                    </a>
+
+                    <a href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}" class="btn btn_white">
+                        {{ __("Продолжить покупки") }}
+                    </a>
                 </div>
             </div>
             <div class="errorPage {{ $isEmpty ? 'active' : '' }}">
@@ -127,7 +132,9 @@
                 <div class="block1">
                     <div class="desc">{{__("В корзине пока нет товаров")}}</div>
                     <div class="btns">
-                        <a class="btn red" href="{{ route('pages.get', 'catalog') }}">{{__("В каталог")}}</a>
+                        <a class="btn red" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">
+                            {{ __("В каталог") }}
+                        </a>
                     </div>
                 </div>
             </div>

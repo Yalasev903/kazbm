@@ -10,8 +10,8 @@
             @include('components.breadcrumbs', [
                 'title' => $product->title,
                 'parents' => [
-                    'Каталог' => route('pages.get', 'catalog'),
-                    $category->name => route('category.show', $category->slug)
+                    'Каталог' => city_route('pages.city.get', ['slug' => 'catalog']),
+                    $category->name => city_route('category.city.show', ['slug' => $category->slug]),
                 ]
             ])
             <div class="block1">
@@ -42,7 +42,7 @@
                     </div>
                 </div>
                 <div class="right">
-                    <h1 class="title">{{ $product->title }}</h1>
+                    <h1 class="title">{{ $h1 ?? $product->title }}</h1>
                     <div class="items">
                         @if($product->size_id)
                             <div class="item">
@@ -168,7 +168,7 @@
                             </div>
 
                             <div class="btn right goBasket" style="display: {{ $product->hasCart() ? 'flex' : 'none' }}">
-                                <a class="btn" href="{{ route('pages.get', 'cart') }}">{{__("Перейти в корзину")}}</a>
+                                <a class="btn" href="{{ city_route('pages.city.get', ['slug' => 'cart']) }}">{{__("Перейти в корзину")}}</a>
                             </div>
 												@if ($product->brick_texture_file)
 <div class="btn" style="display: flex; align-items: center; justify-content: center; padding: 4px 0;">

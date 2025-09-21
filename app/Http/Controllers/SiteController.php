@@ -67,7 +67,6 @@ class SiteController extends Controller
 
     public function getCategory(string $slug, Request $request)
     {
-
         $currentCity = app('currentCity');
 
         $slug = $request->route('slug');
@@ -79,11 +78,29 @@ class SiteController extends Controller
         $mergeData = (new Product)->getCatalogData($request, $category->id);
 
         $seo = $this->buildSeoForPage($currentCity, 'category', $category);
-        view()->share($seo);
 
-        return view('pages.catalog.category', compact('category', 'colors'), $mergeData);
+        // Нормализация значений с безопасными fallback
+        $seoTitle = $seo['seoTitle'] ?? $category->seo_title ?? $category->name ?? config('app.name');
+        $seoDescription = $seo['seoDescription'] ?? $category->meta_description ?? '';
+        $seoKeywords = $seo['seoKeywords'] ?? $category->meta_keywords ?? '';
+        $h1 = $seo['h1'] ?? $category->title ?? $category->name ?? '';
+
+        // Передаём в view — явные имена, чтобы layout/шаблон мог использовать любое
+        $viewVars = [
+            'seoTitle' => $seoTitle,
+            'seoDescription' => $seoDescription,
+            'seoKeywords' => $seoKeywords,
+            'h1' => $h1,
+
+            // legacy / snake_case
+            'seo_title' => $seoTitle,
+            'meta_description' => $seoDescription,
+            'meta_keywords' => $seoKeywords,
+            'page_title' => $seoTitle,
+        ];
+
+        return view('pages.catalog.category', array_merge(compact('category', 'colors'), $mergeData, $viewVars));
     }
-
     public function getProduct(Request $request)
     {
 

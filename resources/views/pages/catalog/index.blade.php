@@ -11,9 +11,8 @@
             </div>
         </div>
         <div class="container">
-            @include('components.breadcrumbs')
+             @include('components.breadcrumbs')
             <div class="titles">{{ __($page->sub_title ?: $page->title) }}</div>
-
             <div class="titles">Рассчитайте необходимое количество кирпича</div>
             <div class="block1" id="calc">
                 <div class="block1_left">

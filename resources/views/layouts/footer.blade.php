@@ -7,7 +7,13 @@
                     <img class="logo" src="{{ $generalSettings->getRealFormat('logo') }}" alt="footer logo">
                     <div class="item">
                         <div class="item_top">{{__("Адрес")}}:</div>
-                        <div class="item_bottom">{{ $generalSettings->{'address_' . App::getLocale()} }}</div>
+                        <div class="item_bottom">
+                            @if($footerCity->slug === 'pavlodar')
+                                {{ $generalSettings->{'address_' . App::getLocale()} }}
+                            @else
+                                {{ $footerCity->name }}
+                            @endif
+                        </div>
                     </div>
                     <div class="item">
                         <div class="item_top">{{__("Телефон")}}:</div>
@@ -37,11 +43,11 @@
                         @endif
                     </div>
                     <div class="menu_right">
-                        <a class="link" href="{{ route('pages.get', 'about') }}">{{__("О компании")}}</a>
-                        <a class="link" href="{{ route('pages.get', 'calculator') }}">{{__("Калькулятор")}}</a>
-                        <a class="link" href="{{ route('pages.get', 'catalog') }}">{{__("Каталог")}}</a>
-                        <a class="link" href="{{ route('pages.get', 'articles') }}">{{__("Статьи")}}</a>
-                        <a class="link" href="{{ route('pages.get', 'contacts') }}">{{__("Контакты")}}</a>
+                        <a class="link" href="{{ city_route('about.city') }}">{{__("О компании")}}</a>
+                        <a class="link" href="{{ city_route('calculator.city') }}">{{__("Калькулятор")}}</a>
+                        <a class="link" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">{{__("Каталог")}}</a>
+                        <a class="link" href="{{ city_route('pages.city.get', ['slug' => 'articles']) }}">{{__("Статьи")}}</a>
+                        <a class="link" href="{{ city_route('contacts.city') }}">{{__("Контакты")}}</a>
                     </div>
                 </div>
 
@@ -54,13 +60,13 @@
                     <button onclick="Sender.footerForm()">{{__("Отправить")}}</button>
                     <div class="privacy">
                       {{__("Нажимая на кнопку, вы даёте согласие на обработку персональных данных и соглашаетесь с")}}
-                        <a href="{{ route('pages.get', 'privacy-policy') }}">{{__("политикой конфиденциальности")}}</a>
+                        <a href="{{ city_route('pages.city.get', ['slug' => 'privacy-policy']) }}">{{__("политикой конфиденциальности")}}</a>
                     </div>
                 </div>
             </div>
         </div>
         <div class="footer_bottom">
-            <a class="confidence" href="{{ route('pages.get', 'privacy-policy') }}">{{__("Политика конфиденциальности")}}</a>
+            <a class="confidence" href="{{ city_route('pages.city.get', ['slug' => 'privacy-policy']) }}">{{__("Политика конфиденциальности")}}</a>
             <div class="privacy">{{__("Все права защищены")}}</div>
 
         </div>

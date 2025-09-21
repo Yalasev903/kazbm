@@ -1,14 +1,19 @@
+@php(\Log::debug('category view vars', ['seoTitle' => $seoTitle ?? null, 'seo_title' => $seo_title ?? null]))
 @extends('layouts.app')
-@section('page_title',(strlen($category->name) > 1 ? $category->name : ''))
-@section('seo_title', (strlen($category->seo_title) > 1 ? $category->seo_title : ''))
-@section('meta_keywords',(strlen($category->meta_keywords) > 1 ? $category->meta_keywords : ''))
-@section('meta_description', (strlen($category->meta_description) > 1 ? $category->meta_description : ''))
+
+@section('page_title', $page_title)
+@section('seo_title', $seo_title)
+@section('meta_description', $meta_description)
+@section('meta_keywords', $meta_keywords)
+
 @section('content')
+    <main class="catalogPage">
+        <div class="container">
     <main class="catalogPage">
         <div class="container">
             @include('.components.breadcrumbs', [
                 'title' => __($category->name),
-                'parents' => ['Каталог' => route('pages.get', 'catalog')]
+                'parents' => ['Каталог' => city_route('pages.city.get', ['slug' => 'catalog'])]
             ])
             <div class="banner">
                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1380" height="339" viewBox="0 0 1380 339" fill="none">
@@ -220,7 +225,7 @@
                             const $activeSlides = $slider.find('.slick-active');
                             const $nextSlides = $slider.find('.slick-active').next();
                             const $prevSlides = $slider.find('.slick-active').prev();
-                            
+
                             $activeSlides.add($nextSlides).add($prevSlides).find('img[data-lazy]').each(function() {
                                 const $img = $(this);
                                 const src = $img.attr('data-lazy');
