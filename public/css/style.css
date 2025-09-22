@@ -1598,7 +1598,7 @@ h2 {
 
 .header_center {
   position: absolute;
-  left: 50%;
+  left: 46%;
   top: calc(50% + 2px);
   -webkit-transform: translate(-50%, -50%);
       -ms-transform: translate(-50%, -50%);

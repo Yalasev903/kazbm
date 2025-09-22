@@ -8,6 +8,8 @@ use App\Models\Category;
 use App\Models\Page;
 use App\Models\Product;
 use App\Models\ProductColor;
+use App\Models\City;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 
@@ -126,6 +128,22 @@ class SiteController extends Controller
          view()->share($seo);
 
         return view('pages.products.show', compact('product'));
+    }
+
+    public function setCity(Request $request)
+    {
+        $citySlug = $request->input('city');
+        $city = City::where('slug', $citySlug)->first();
+
+        if (!$city) {
+            return response()->json(['error' => 'Город не найден'], 404);
+        }
+
+        // Устанавливаем куки на 30 дней (30*24*60 минут)
+        $minutes = 30 * 24 * 60;
+        Cookie::queue('selected_city', $city->slug, $minutes);
+
+        return response()->json(['success' => true, 'city' => $city->name]);
     }
 
     private function getParamsByPage($page, $request)

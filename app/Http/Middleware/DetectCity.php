@@ -10,21 +10,20 @@ class DetectCity
 {
     public function handle(Request $request, Closure $next)
     {
-        // В начало метода handle в DetectCity.php
-if ($request->is('admin*') ||
-    $request->is('filament*') ||
-    $request->is('_debugbar*') ||
-    class_exists(\Filament\Facades\Filament::class) && \Filament\Facades\Filament::isServing()) {
-    return $next($request);
-}
+        // Игнорируем админку, filament и служебные маршруты
+        if ($request->is('admin*') ||
+            $request->is('filament*') ||
+            $request->is('_debugbar*') ||
+            (class_exists(\Filament\Facades\Filament::class) && \Filament\Facades\Filament::isServing())) {
+            return $next($request);
+        }
 
-if ($request->isMethod('post') ||
-    $request->header('X-Livewire') ||
-    $request->header('X-Filament')) {
-    return $next($request);
-}
+        if ($request->isMethod('post') ||
+            $request->header('X-Livewire') ||
+            $request->header('X-Filament')) {
+            return $next($request);
+        }
 
-       // Полный список путей, которые должны игнорироваться
         $adminPaths = [
             'admin',
             'filament',
@@ -42,21 +41,19 @@ if ($request->isMethod('post') ||
         ];
         $currentPath = $request->path();
 
-        // Проверяем, начинается ли путь с любого из административных путей
         foreach ($adminPaths as $adminPath) {
             if (str_starts_with($currentPath, $adminPath)) {
                 return $next($request);
             }
         }
 
-        // Также проверяем по полному URL для Filament
         if (str_contains($request->url(), '/admin/') ||
             str_contains($request->url(), '/filament/')) {
             return $next($request);
         }
 
+        // Исключения, где город не нужен
         $path = $request->path();
-
         $exceptions = ['profile', 'ajax', 'forgot-password', 'order/invoice'];
         foreach ($exceptions as $ex) {
             if (str_starts_with($path, $ex)) {
@@ -64,7 +61,6 @@ if ($request->isMethod('post') ||
                 app()->instance('currentCity', $city);
                 view()->share('currentCity', $city);
 
-                // Установка города для футера
                 $footerCity = City::where('slug', 'pavlodar')->first() ?? $city;
                 app()->instance('footerCity', $footerCity);
                 view()->share('footerCity', $footerCity);
@@ -73,8 +69,12 @@ if ($request->isMethod('post') ||
             }
         }
 
-        $citySlug = $request->route('city') ?? null;
+        // 🔑 Основное: ищем город в URL или в куки
+        $citySlug = $request->route('city')
+            ?? $request->cookie('selected_city')
+            ?? null;
 
+        // Если город не указан и путь не корень → редирект на дефолтный город
         if (!$citySlug && $request->path() != '/') {
             $defaultCity = City::where('is_default', true)->first();
             if ($defaultCity) {
@@ -89,17 +89,16 @@ if ($request->isMethod('post') ||
             $city = City::where('is_default', true)->first() ?? City::first();
         }
 
+        // Шарим текущий город
         app()->instance('currentCity', $city);
         view()->share('currentCity', $city);
 
-        // Определение города для футера
+        // Для футера — всегда "Павлодар", если нет города в URL
         $footerCity = $city;
         $route = $request->route();
-
         if ($route && !$route->parameter('city')) {
             $footerCity = City::where('slug', 'pavlodar')->first() ?? $city;
         }
-
         app()->instance('footerCity', $footerCity);
         view()->share('footerCity', $footerCity);
 

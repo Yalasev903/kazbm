@@ -40,6 +40,8 @@ Route::get('/debug-route', function() {
     ]);
 });
 
+Route::post('/set-city', [SiteController::class, 'setCity'])->name('set.city');
+
 Route::prefix('ajax')
     ->name('ajax.')
     ->middleware(ForceJsonResponse::class)

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
+use App\Models\City;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -54,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         ], function ($view) use ($sizes) {
             $view->with('sizes', $sizes);
         });
-
+        $cities = City::where('is_default', true)->get(); // только активные города
+        View::share('cities', $cities);
     }
 }
