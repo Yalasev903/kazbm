@@ -12,7 +12,7 @@
                 <div class="desc">Извините, страница не найдена</div>
                 <div class="btns">
                     <a class="btn red" href="/">На главную</a>
-                    <a class="btn" href="{{ route('pages.get', 'catalog') }}">Перейти в каталог</a>
+                    <a class="btn" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">Перейти в каталог</a>
                 </div>
             </div>
             @include('layouts.footer')

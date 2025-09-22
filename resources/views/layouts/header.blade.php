@@ -56,9 +56,17 @@
             </a>
             <div class="btn" onclick="showModal(1)">{{__("Заказать звонок")}}</div>
             <div class="extraIcon" onclick="openCustomModal()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24">
+                {{-- <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24">
                     <path d="m12,16.791l4.949-4.841c1.322-1.322,2.051-3.08,2.051-4.95s-.729-3.627-2.051-4.95c-1.321-1.322-3.079-2.05-4.949-2.05s-3.628.728-4.95,2.05c-2.729,2.729-2.729,7.17.004,9.903l4.946,4.837ZM7.757,2.757c1.134-1.133,2.641-1.757,4.243-1.757s3.109.624,4.242,1.757c1.134,1.133,1.758,2.64,1.758,4.243s-.624,3.109-1.754,4.239l-4.246,4.154-4.243-4.15c-2.339-2.339-2.339-6.146,0-8.485Zm4.243,7.223c1.648,0,2.99-1.341,2.99-2.99s-1.342-2.99-2.99-2.99-2.99,1.341-2.99,2.99,1.342,2.99,2.99,2.99Zm0-4.98c1.098,0,1.99.893,1.99,1.99s-.893,1.99-1.99,1.99-1.99-.893-1.99-1.99.893-1.99,1.99-1.99Zm11.943,11.846l-11.943,7.166L.057,16.846l5.664-3.398h0l.783.766-4.503,2.632,10,6,10-6-4.482-2.654.761-.744,5.665,3.399Z"/>
-                </svg>
+                </svg> --}}
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xodm="http://www.corel.com/coreldraw/odm/2003" xml:space="preserve" width="26" height="26" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 13803.29 13584.13">
+
+  <path class="fil0" d="M10513.22 4643.98c0,1122.52 -376.16,1859.27 -968.59,2651.31l-1334.25 1556.27c-67.49,65.95 -80.16,80.06 -139.83,157.32 -190.43,224.35 -970.8,1221.19 -1168.89,1474.41 -198.09,-253.22 -978.47,-1250.07 -1168.89,-1474.41 -59.68,-77.26 -72.35,-91.37 -139.83,-157.32l-1334.25 -1556.27c-592.43,-792.04 -968.59,-1528.79 -968.59,-2651.31 0,-1256.48 724.84,-2417.02 1801.4,-3061.14 526.48,-315.01 1170.15,-485.92 1810.17,-494.66 640.02,8.74 1283.69,179.65 1810.17,494.66 1076.56,644.13 1801.4,1804.67 1801.4,3061.14zm-3611.57 7148.75c261.84,-20.98 529.79,-257.01 855.94,-719.38 1208.94,-1713.9 3281.5,-3188.72 3739.38,-5310.55 223.82,-1037.17 100.14,-1851.27 -216.75,-2777.28 -138.72,-405.41 -463.35,-886.72 -716.63,-1228.4 -313.94,-423.5 -945.93,-934.31 -1409.94,-1183.41 -420.93,-225.97 -951,-430.63 -1437.98,-507.05 -265.19,-41.62 -539.07,-64.64 -814.02,-66.65 -274.96,2.01 -548.84,25.04 -814.02,66.65 -486.98,76.42 -1017.05,281.08 -1437.98,507.05 -464.01,249.1 -1096,759.91 -1409.94,1183.41 -253.28,341.68 -577.9,822.98 -716.63,1228.4 -316.89,926.02 -440.57,1740.12 -216.75,2777.28 457.88,2121.83 2530.44,3596.65 3739.38,5310.55 326.15,462.36 594.1,698.4 855.94,719.38zm-2255.37 -5779.88c184.43,343.73 426.18,590.67 724.13,815.68 407.79,307.94 1325.86,652.16 1753.19,463.73 474.94,-209.43 407.32,-893.96 -60.92,-1021.41 -132,-35.92 -239.99,-20.18 -388.98,-43.25 -143.73,-22.26 -236.68,-58.66 -354.15,-105.09 -909.13,-359.37 -1179.84,-1532.32 -617.97,-2278.33 650.58,-863.79 1963.53,-787.88 2503.67,149.5 314.23,545.31 91.28,890.5 383.07,1156.75 284.21,259.35 911.65,179.16 911.65,-479.43 0,-345.08 -111.23,-747.51 -224.79,-990.85 -1459.48,-3127.52 -6368.12,-908.98 -4628.91,2332.7zm-4646.28 6274.6c0,684.31 559.19,1296.68 1242.65,1296.68l5659 0 5659 0c683.46,0 1242.65,-612.37 1242.65,-1296.68 0,-360.7 -262.26,-795.08 -396.21,-1062.56 -86.29,-172.29 -147.84,-322.98 -234.12,-495.27 -412.24,-823.14 -721.63,-1845.96 -1773.93,-1845.96 -465.04,0 -837.76,-74.76 -1028.4,295.33 -100.05,194.24 -73.86,438.97 55.02,597 352.17,431.83 988.49,3.95 1228.63,365.22l798.3 1605.96c76.85,153.7 484.97,756.4 27.01,756.4l-5577.95 0 -5577.95 0c-457.96,0 -49.84,-602.69 27.01,-756.4l798.3 -1605.96c240.14,-361.26 876.46,66.62 1228.63,-365.22 128.88,-158.03 155.07,-402.76 55.02,-597 -190.64,-370.09 -563.36,-295.33 -1028.4,-295.33 -1052.3,0 -1361.69,1022.83 -1773.93,1845.96 -86.28,172.29 -147.83,322.98 -234.12,495.27 -133.95,267.47 -396.21,701.86 -396.21,1062.56z"/>
+
+</svg>
+                    <div class="cityName">
+                        {{ $currentCity->name ?? 'Павлодар' }}
+                    </div>
             </div>
             <div class="searchBtn" onclick="closeMobileMenu();openSearch()">
                 <svg width="30" height="31" viewBox="0 0 30 31" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -92,6 +100,42 @@
         </div>
         <div class="basketAt"></div>
     </div>
+    {{-- Модальное окно выбора города --}}
+    {{-- <div id="cityModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeCityModal()">&times;</span>
+        <h2>Выберите город</h2>
+        <div class="city-list">
+            @if(!empty($cities) && $cities->count())
+                @foreach($cities as $city)
+                    <a href="{{ city_route('pages.city.get', ['slug' => $city->slug]) }}">
+                        {{ $city->name }}
+                    </a>
+                @endforeach
+            @else
+                <p>Список городов пуст.</p>
+            @endif
+        </div>
+    </div>
+</div> --}}
+<div id="cityModal" class="city-modal" style="display: none;">
+    <div class="city-modal__content">
+        <span class="city-modal__close" onclick="closeCityModal()">&times;</span>
+        <h2 class="city-modal__title">Выберите город</h2>
+        <div class="city-modal__list">
+            @if(!empty($cities) && $cities->count())
+                @foreach($cities as $city)
+                    <a href="{{ city_route('pages.city.get', ['slug' => $city->slug]) }}" class="city-modal__item">
+                        {{ $city->name }}
+                    </a>
+                @endforeach
+            @else
+                <p class="city-modal__empty">Список городов пуст.</p>
+            @endif
+        </div>
+    </div>
+</div>
+
 </header>
 
 <div class="mobileMenu_bloor" onclick="closeMobileMenu()"></div>
@@ -177,3 +221,74 @@
         </a>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Открытие модалки по клику на иконку
+    const cityIcon = document.querySelector('.extraIcon');
+    const cityModal = document.getElementById('cityModal');
+
+    if (cityIcon && cityModal) {
+        cityIcon.addEventListener('click', () => {
+            cityModal.style.display = 'flex'; // flex для центрирования
+        });
+    }
+
+    // Закрытие модалки по клику на крестик
+    const closeBtn = cityModal.querySelector('.city-modal__close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            cityModal.style.display = 'none';
+        });
+    }
+
+    // Закрытие при клике вне контента модалки
+    cityModal.addEventListener('click', (event) => {
+        if (event.target === cityModal) {
+            cityModal.style.display = 'none';
+        }
+    });
+
+    // Выбор города
+    const cityLinks = cityModal.querySelectorAll('.city-modal__item');
+
+    cityLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const citySlug = link.getAttribute('href').split('/').pop(); // выбранный город
+
+            fetch('{{ route("set.city") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ city: citySlug })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    cityModal.style.display = 'none';
+
+                    // Разбираем текущий URL
+                    const urlParts = window.location.pathname.split('/').filter(Boolean);
+
+                    // Заменяем первый сегмент на новый город
+                    if (urlParts.length > 0) {
+                        urlParts[0] = citySlug;
+                    }
+
+                    // Формируем новый путь
+                    const newPath = '/' + urlParts.join('/');
+                    window.location.href = newPath + window.location.search; // сохраняем query string
+                } else {
+                    alert('Ошибка при выборе города');
+                }
+            })
+            .catch(err => console.error('Ошибка:', err));
+        });
+    });
+});
+</script>
+
+

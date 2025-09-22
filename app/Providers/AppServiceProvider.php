@@ -55,7 +55,9 @@ class AppServiceProvider extends ServiceProvider
         ], function ($view) use ($sizes) {
             $view->with('sizes', $sizes);
         });
-        $cities = City::where('is_default', true)->get(); // только активные города
-        View::share('cities', $cities);
+        View::composer('layouts.header', function ($view) {
+            $cities = City::all();
+            $view->with('cities', $cities);
+        });
     }
 }
