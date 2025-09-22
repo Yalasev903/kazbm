@@ -10,6 +10,51 @@ class DetectCity
 {
     public function handle(Request $request, Closure $next)
     {
+        // В начало метода handle в DetectCity.php
+if ($request->is('admin*') ||
+    $request->is('filament*') ||
+    $request->is('_debugbar*') ||
+    class_exists(\Filament\Facades\Filament::class) && \Filament\Facades\Filament::isServing()) {
+    return $next($request);
+}
+
+if ($request->isMethod('post') ||
+    $request->header('X-Livewire') ||
+    $request->header('X-Filament')) {
+    return $next($request);
+}
+
+       // Полный список путей, которые должны игнорироваться
+        $adminPaths = [
+            'admin',
+            'filament',
+            '_debugbar',
+            'livewire',
+            'livewire-ui',
+            'livewire-ui-modal',
+            'api',
+            'graphql',
+            'horizon',
+            'telescope',
+            'vendor',
+            'storage',
+            'uploads'
+        ];
+        $currentPath = $request->path();
+
+        // Проверяем, начинается ли путь с любого из административных путей
+        foreach ($adminPaths as $adminPath) {
+            if (str_starts_with($currentPath, $adminPath)) {
+                return $next($request);
+            }
+        }
+
+        // Также проверяем по полному URL для Filament
+        if (str_contains($request->url(), '/admin/') ||
+            str_contains($request->url(), '/filament/')) {
+            return $next($request);
+        }
+
         $path = $request->path();
 
         $exceptions = ['profile', 'ajax', 'forgot-password', 'order/invoice'];

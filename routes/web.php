@@ -97,7 +97,7 @@ Route::prefix('ajax')
 Route::controller(ProfileController::class)
     ->prefix('profile')
     ->name('profile.')
-    ->middleware(UserAuthenticate::class)
+    ->middleware(UserAuthenticate::class, 'detect.city')
     ->group(function () {
         Route::get('/index','index')->name('index');
         Route::get('/history','history')->name('history');

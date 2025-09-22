@@ -1,10 +1,10 @@
 @php(\Log::debug('category view vars', ['seoTitle' => $seoTitle ?? null, 'seo_title' => $seo_title ?? null]))
 @extends('layouts.app')
 
-@section('page_title', $page_title)
+{{-- @section('page_title', $page_title)
 @section('seo_title', $seo_title)
 @section('meta_description', $meta_description)
-@section('meta_keywords', $meta_keywords)
+@section('meta_keywords', $meta_keywords) --}}
 
 @section('content')
     <main class="catalogPage">

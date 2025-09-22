@@ -11,28 +11,46 @@ use Illuminate\Support\Facades\Hash;
 class ProfileController extends AuthController
 {
 
-    public function index()
-    {
-        $user = $this->guard()->user();
-        return view('pages.profile.index', compact('user'));
-    }
+public function index()
+{
+    $user = $this->guard()->user();
 
-    public function history()
-    {
+    // Устанавливаем SEO-данные для страницы профиля
+    $seo = [
+        'seoTitle' => __('Личный кабинет') . ' - ' . config('app.name'),
+        'seoDescription' => '',
+        'seoKeywords' => '',
+        'h1' => __('Личный кабинет')
+    ];
+    view()->share($seo);
 
-        $user = $this->guard()->user();
-        $orderIds = OrderHistory::query()
-            ->where('user_id', $user->id)
-            ->pluck('order_id')
-            ->toArray();
+    return view('pages.profile.index', compact('user'));
+}
 
-        $orders = Order::query()
-            ->with(['orderInvoice'])
-            ->whereIn('id', $orderIds)
-            ->get();
+public function history()
+{
+    $user = $this->guard()->user();
+    $orderIds = OrderHistory::query()
+        ->where('user_id', $user->id)
+        ->pluck('order_id')
+        ->toArray();
 
-        return view('pages.profile.history', compact('user', 'orders'));
-    }
+    $orders = Order::query()
+        ->with(['orderInvoice'])
+        ->whereIn('id', $orderIds)
+        ->get();
+
+    // Устанавливаем SEO-данные для страницы истории заказов
+    $seo = [
+        'seoTitle' => __('История заказов') . ' - ' . config('app.name'),
+        'seoDescription' => '',
+        'seoKeywords' => '',
+        'h1' => __('История заказов')
+    ];
+    view()->share($seo);
+
+    return view('pages.profile.history', compact('user', 'orders'));
+}
 
     public function settings(SiteUserRequest $request)
     {

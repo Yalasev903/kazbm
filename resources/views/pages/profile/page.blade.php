@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('page_title', __('Личный кабинет'))
+{{-- @section('page_title', __('Личный кабинет')) --}}
 @section('content')
     <main class="profilePage">
         <div class="container">

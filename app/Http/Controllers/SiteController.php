@@ -79,6 +79,9 @@ class SiteController extends Controller
 
         $seo = $this->buildSeoForPage($currentCity, 'category', $category);
 
+        // Добавляем шаринг SEO-данных для использования в layout
+        view()->share($seo);
+
         // Нормализация значений с безопасными fallback
         $seoTitle = $seo['seoTitle'] ?? $category->seo_title ?? $category->name ?? config('app.name');
         $seoDescription = $seo['seoDescription'] ?? $category->meta_description ?? '';
@@ -179,11 +182,13 @@ private function buildSeoForPage($city, $type, $entity)
         $seoKeywords = $cityPageSeo->meta_keywords ?? $cityMetaKeywords;
     } else {
         // fallback: entity seo + append city
-        $baseTitle = $entity->seo_title ?? ($entity->title ?? '');
+        // Используем name для категорий, так как у них нет title
+        $baseTitle = $entity->seo_title ?? ($entity->title ?? $entity->name ?? '');
         $seoTitle = $baseTitle ? ($baseTitle . ' в ' . $citySeoTitle) : config('app.name');
         $metaDescription = $entity->meta_description ?? $cityMetaDescription;
         $seoKeywords = $entity->meta_keywords ?? $cityMetaKeywords;
-        $h1 = $entity->title ?? $cityH1;
+        // Используем name для h1, так как у категорий нет title
+        $h1 = $entity->title ?? $entity->name ?? $cityH1;
     }
 
     return [

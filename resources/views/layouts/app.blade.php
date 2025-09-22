@@ -9,15 +9,16 @@
     {{-- <title>@if(strlen($__env->yieldContent('seo_title')) > 2) @yield('seo_title') @else @yield('page_title') @endif</title>
     <meta name="description" content="@yield('meta_description')">
     <meta name="keywords" content="@yield('meta_keywords')">
-    <meta name="title" content="@yield('seo_title')">
-    @if(View::hasSection('seo'))
-        @yield('seo')
-    @endif --}}
+    <meta name="title" content="@yield('seo_title')"> --}}
+
     {{-- <title>{{ $seoTitle ?? ($page->seo_title ?? config('app.name')) }}</title> --}}
     <title>{{ $seoTitle ?? config('app.name') }}</title>
     <meta name="description" content="{{ $seoDescription ?? ($page->meta_description ?? '') }}">
     <meta name="keywords" content="{{ $seoKeywords ?? ($page->meta_keywords ?? '') }}">
     <link rel="canonical" href="{{ url()->current() }}" />
+@if(View::hasSection('seo'))
+        @yield('seo')
+    @endif
 
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
