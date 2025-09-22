@@ -7,8 +7,20 @@
     <main class="articlePage proKirpichPage">
         <div class="container">
             @include('components.breadcrumbs')
-            <div class="titles">{{ $page->sub_title ?: $page->title }}</div>
 
+            @php
+                $currentCity = app('currentCity');
+                $cityH1 = $currentCity->getTranslation('h1', 'ru') ?? $currentCity->h1 ?? '';
+                $mainTitle = $page->sub_title ?: $page->title;
+
+                // Добавляем город к заголовку, если он есть
+                if ($cityH1) {
+                    $mainTitle .= ' в ' . $cityH1;
+                }
+            @endphp
+
+            {{-- <div class="titles">{{ $page->sub_title ?: $page->title }}</div> --}}
+            <div class="titles">{{ $mainTitle }}</div>
             @php $ourProductSettings = app(\App\Filament\Settings\OurProductSettings::class) @endphp
             <picture class="banner">
                 @if($heroPhoto = $ourProductSettings->getWebpFormat('hero_image'))

@@ -7,7 +7,9 @@
     <main class="articlesPage">
         <div class="container">
             @include('.components.breadcrumbs')
-            <div class="titles">{{__($page->title)}}</div>
+            <div class="titles">
+                {{ __($page->title) }} в {{ $h1 }}
+            </div>
             <div class="articleItems">
                 @include('components.articles.items')
             </div>

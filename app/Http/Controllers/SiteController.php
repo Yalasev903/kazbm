@@ -41,9 +41,8 @@ class SiteController extends Controller
         return view("pages.$page->type", compact('page'), $mergeData);
     }
 
-    public function getArticle(string $slug)
+    public function getArticle($city, string $slug)
     {
-
         $currentCity = app('currentCity');
 
         $article = Article::query()
@@ -60,10 +59,14 @@ class SiteController extends Controller
             ->get();
 
         $seo = $this->buildSeoForPage($currentCity, 'article', $article);
+
+        $seo['h1'] = 'Статьи в ' . ($currentCity->seo_title ?? $currentCity->name);
+
         view()->share($seo);
 
         return view("pages.articles.show", compact('article', 'articles'));
     }
+
 
     public function getCategory(string $slug, Request $request)
     {
@@ -173,7 +176,11 @@ private function buildSeoForPage($city, $type, $entity)
     $citySeoTitle = $city->getTranslation('seo_title', 'ru') ?? $city->seo_title ?? '';
     $cityMetaDescription = $city->getTranslation('meta_description', 'ru') ?? $city->meta_description ?? '';
     $cityMetaKeywords = $city->getTranslation('meta_keywords', 'ru') ?? $city->meta_keywords ?? '';
-    $cityH1 = $city->getTranslation('h1', 'ru') ?? $city->h1 ?? '';
+    $cityH1 = $city->getTranslation('h1', 'ru');
+        if (!$cityH1 && $city->h1) {
+            $decoded = json_decode($city->h1, true);
+            $cityH1 = $decoded['ru'] ?? '';
+        }
 
     if ($cityPageSeo) {
         $seoTitle = $this->renderTemplate($cityPageSeo->seo_title, $entity, $citySeoTitle);
@@ -188,7 +195,11 @@ private function buildSeoForPage($city, $type, $entity)
         $metaDescription = $entity->meta_description ?? $cityMetaDescription;
         $seoKeywords = $entity->meta_keywords ?? $cityMetaKeywords;
         // Используем name для h1, так как у категорий нет title
-        $h1 = $entity->title ?? $entity->name ?? $cityH1;
+        if ($entity->slug === 'articles') {
+            $h1 = $cityH1; // для статической страницы articles берём H1 города
+        } else {
+            $h1 = $entity->title ?? $entity->name ?? $cityH1;
+        }
     }
 
     return [

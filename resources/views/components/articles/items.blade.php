@@ -1,6 +1,11 @@
 <div class="block1">
     @foreach($articles as $article)
-        <a class="item" href="{{ route('article.show', $article->slug) }}">
+        @php
+            $url = city_route('article.city.show', ['slug' => $article->slug]);
+        @endphp
+        <a class="item" href="{{ $url }}">
+            <!-- Отладочная информация -->
+            <!-- <div style="display:none;">{{ $url }}</div> -->
             <picture>
                 @if($photo = $article->getWebpFormat('small_image'))
                     <source srcset="{{$photo}}" type="image/webp">
@@ -16,4 +21,3 @@
     @endforeach
 </div>
 <div class="pogination_block">{{ $articles->links() }}</div>
-
