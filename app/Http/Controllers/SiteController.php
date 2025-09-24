@@ -194,27 +194,44 @@ private function buildSeoForPage($city, $type, $entity)
     $citySeoTitle = $city->getTranslation('seo_title', 'ru') ?? $city->seo_title ?? '';
     $cityMetaDescription = $city->getTranslation('meta_description', 'ru') ?? $city->meta_description ?? '';
     $cityMetaKeywords = $city->getTranslation('meta_keywords', 'ru') ?? $city->meta_keywords ?? '';
+
+    // H1 города (основной источник)
     $cityH1 = $city->getTranslation('h1', 'ru');
-        if (!$cityH1 && $city->h1) {
-            $decoded = json_decode($city->h1, true);
-            $cityH1 = $decoded['ru'] ?? '';
-        }
+    if (!$cityH1 && $city->h1) {
+        $decoded = json_decode($city->h1, true);
+        $cityH1 = $decoded['ru'] ?? '';
+    }
+    if (!$cityH1) {
+        // fallback если в h1 пусто — берём name
+        $decoded = is_string($city->name) ? json_decode($city->name, true) : $city->name;
+        $cityH1 = $decoded['ru'] ?? (is_array($city->name) ? ($city->name['ru'] ?? '') : $city->name);
+    }
 
     if ($cityPageSeo) {
-        $seoTitle = $this->renderTemplate($cityPageSeo->seo_title, $entity, $citySeoTitle);
-        $metaDescription = $this->renderTemplate($cityPageSeo->meta_description, $entity, $cityMetaDescription);
-        $h1 = $this->renderTemplate($cityPageSeo->h1, $entity, $cityH1);
-        $seoKeywords = $cityPageSeo->meta_keywords ?? $cityMetaKeywords;
+    $seoTitle = $this->renderTemplate($cityPageSeo->seo_title, $entity, $citySeoTitle);
+    $metaDescription = $this->renderTemplate($cityPageSeo->meta_description, $entity, $cityMetaDescription);
+    $h1 = $this->renderTemplate($cityPageSeo->h1, $entity, $cityH1);
+    $seoKeywords = $cityPageSeo->meta_keywords ?? $cityMetaKeywords;
     } else {
         // fallback: entity seo + append city
-        // Используем name для категорий, так как у них нет title
         $baseTitle = $entity->seo_title ?? ($entity->title ?? $entity->name ?? '');
-        $seoTitle = $baseTitle ? ($baseTitle . ' в ' . $citySeoTitle) : config('app.name');
+
+        if ($entity->slug === '/' || $entity->slug === 'home') {
+            // Для главной страницы: только город, без "Главная страница"
+            $seoTitle = $citySeoTitle ?: config('app.name');
+        } else {
+            // Для всех остальных страниц: стандартный формат
+            $seoTitle = $baseTitle ? ($baseTitle . ' ' . $citySeoTitle) : config('app.name');
+        }
+
         $metaDescription = $entity->meta_description ?? $cityMetaDescription;
         $seoKeywords = $entity->meta_keywords ?? $cityMetaKeywords;
-        // Используем name для h1, так как у категорий нет title
-        if ($entity->slug === 'articles') {
-            $h1 = $cityH1; // для статической страницы articles берём H1 города
+
+        // Определяем H1
+        if ($entity->slug === '/' || $entity->slug === 'home') {
+            $h1 = $cityH1; // для главной — только H1 города
+        } elseif ($entity->slug === 'articles') {
+            $h1 = $cityH1;
         } else {
             $h1 = $entity->title ?? $entity->name ?? $cityH1;
         }
@@ -228,15 +245,14 @@ private function buildSeoForPage($city, $type, $entity)
     ];
 }
 
+
 private function buildSeoForProduct($city, $product)
 {
-    // Получаем SEO-поля города с поддержкой переводов
     $citySeoTitle = $city->getTranslation('seo_title', 'ru') ?? $city->seo_title ?? '';
     $cityMetaDescription = $city->getTranslation('meta_description', 'ru') ?? $city->meta_description ?? '';
     $cityMetaKeywords = $city->getTranslation('meta_keywords', 'ru') ?? $city->meta_keywords ?? '';
-    $cityH1 = $city->getTranslation('h1', 'ru') ?? $city->h1 ?? '';
+    $cityH1 = $city->getTranslation('h1', 'ru') ?? $city->h1 ?? $city->name;
 
-    // Проверяем переопределения для конкретного продукта в конкретном городе
     $override = \DB::table('product_city_seos')
         ->where('product_id', $product->id)
         ->where('city_id', $city->id)
@@ -245,10 +261,10 @@ private function buildSeoForProduct($city, $product)
     if ($override) {
         $seoTitle = $override->seo_title ?? ($product->seo_title ?? $product->title . ' в ' . $citySeoTitle);
         $metaDescription = $override->meta_description ?? ($product->meta_description ?? $cityMetaDescription);
-        $h1 = $override->h1 ?? ($product->title . ' в ' . $citySeoTitle);
+        // H1 для страницы — продукт + H1 города
+        $h1 = $override->h1 ?? ($product->title . ' ' . $cityH1);
         $seoKeywords = $override->meta_keywords ?? ($product->meta_keywords ?? $cityMetaKeywords);
     } else {
-        // Проверяем city_page_seos для страницы 'product'
         $cityPageSeo = \App\Models\CityPageSeo::where('city_id', $city->id)
             ->where('page_slug', 'product')
             ->first();
@@ -262,17 +278,18 @@ private function buildSeoForProduct($city, $product)
                 ? $this->renderTemplate($cityPageSeo->meta_description, $product, $cityMetaDescription)
                 : ($product->meta_description ?? $cityMetaDescription);
 
+            // H1 для страницы — продукт + H1 города
             $h1 = $cityPageSeo->h1
                 ? $this->renderTemplate($cityPageSeo->h1, $product, $cityH1)
-                : ($product->title . ' в ' . $citySeoTitle);
+                : ($product->title . ' ' . $cityH1);
 
-            $seoKeywords = $cityPageSeo->meta_keywords ?? ($product->meta_keywords ?? $cityMetaKeywords);
+            $seoKeywords = $cityPageSeo->meta_keywords
+                ? $cityPageSeo->meta_keywords
+                : ($product->meta_keywords ?? $cityMetaKeywords);
         } else {
-            // Финальный fallback: продукт + город
-            $baseTitle = $product->seo_title ?? $product->title;
-            $seoTitle = $baseTitle . ' в ' . $citySeoTitle;
+            $seoTitle = $product->seo_title ?? ($product->title . ' в ' . $citySeoTitle);
             $metaDescription = $product->meta_description ?? $cityMetaDescription;
-            $h1 = $product->title . ' в ' . $citySeoTitle;
+            $h1 = $product->title . ' ' . $cityH1; // здесь без "в"
             $seoKeywords = $product->meta_keywords ?? $cityMetaKeywords;
         }
     }
@@ -284,6 +301,7 @@ private function buildSeoForProduct($city, $product)
         'h1' => $h1,
     ];
 }
+
 
 
 

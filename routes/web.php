@@ -12,6 +12,7 @@ use App\Http\Middleware\UserAuthenticate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
+use App\Models\City;
 
 /*
 |--------------------------------------------------------------------------
@@ -111,16 +112,26 @@ Route::get('/set-lang/{lang}', function ($lang) {
     return redirect()->back();
 })->name("lang.change");
 
-Route::get('/', function() {
-    $defaultCity = \App\Models\City::where('is_default', true)->first();
-    return redirect("/{$defaultCity->slug}");
+// Главная страница без города
+Route::get('/', function () {
+    $defaultCity = City::where('is_default', true)->first() ?? City::first();
+    // Устанавливаем город для SEO и шарим в view
+    app()->instance('currentCity', $defaultCity);
+    view()->share('currentCity', $defaultCity);
+
+    // Для футера оставляем "Павлодар" (или другой)
+    $footerCity = City::where('slug', 'pavlodar')->first() ?? $defaultCity;
+    app()->instance('footerCity', $footerCity);
+    view()->share('footerCity', $footerCity);
+
+    return app(\App\Http\Controllers\SiteController::class)->getPage(request(), '/');
 });
 
 Route::group(['prefix' => '{city}', 'middleware' => ['detect.city']], function () {
 
-    // Главная
+    // Главная страница (городная версия)
     Route::get('/', function($city){
-        return app(SiteController::class)->getPage(request(), '/'); // slug = '/' для home
+        return app(SiteController::class)->getPage(request(), '/');
     })->name('home.city');
 
     // Статические страницы
@@ -148,17 +159,16 @@ Route::group(['prefix' => '{city}', 'middleware' => ['detect.city']], function (
 });
 
 // Редирект с корня на дефолтный город
-Route::get('/', function(){
-    $defaultCity = \App\Models\City::where('is_default', true)->first();
-    if (!$defaultCity) abort(404, 'Default city not found');
-    return redirect("/{$defaultCity->slug}");
-});
+// Route::get('/', function(){
+//     $defaultCity = \App\Models\City::where('is_default', true)->first();
+//     if (!$defaultCity) abort(404, 'Default city not found');
+//     return redirect("/{$defaultCity->slug}");
+// });
 
 // legacy маршруты только для fallback (если нет city)
 Route::controller(SiteController::class)->group(function () {
-    Route::get('/{page?}', 'getPage')
-        ->where('page', '^(?!profile/).*')
-         ->where('page', '.*')
+    Route::get('/{page}', 'getPage')
+        ->where('page', '^(?!profile/|ajax|forgot-password|order/invoice).+')
          ->name('pages.get');
     Route::get('/articles/{slug}', 'getArticle')->name('article.show');
     Route::get('/catalog/{slug}', 'getCategory')->name('category.show');

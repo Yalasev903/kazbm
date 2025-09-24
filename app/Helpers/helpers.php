@@ -4,6 +4,12 @@ if (! function_exists('city_route')) {
     function city_route($name, $params = [])
     {
         $city = app('currentCity') ?? null;
+
+        // Для главной страницы не подставляем city в URL
+        if ($name === 'home.city') {
+            return route('home');
+        }
+
         if ($city && !isset($params['city'])) {
             $params = array_merge(['city' => $city->slug], $params);
         }

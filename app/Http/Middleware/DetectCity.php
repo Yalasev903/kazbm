@@ -75,7 +75,7 @@ class DetectCity
             ?? null;
 
         // Если город не указан и путь не корень → редирект на дефолтный город
-        if (!$citySlug && $request->path() != '/') {
+        if (!$citySlug && $request->path() != '/' && !empty($request->path())) {
             $defaultCity = City::where('is_default', true)->first();
             if ($defaultCity) {
                 return redirect("/{$defaultCity->slug}/{$request->path()}");
@@ -99,6 +99,7 @@ class DetectCity
         if ($route && !$route->parameter('city')) {
             $footerCity = City::where('slug', 'pavlodar')->first() ?? $city;
         }
+
         app()->instance('footerCity', $footerCity);
         view()->share('footerCity', $footerCity);
 

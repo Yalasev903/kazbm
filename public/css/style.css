@@ -2161,6 +2161,7 @@ h2 {
 }
 
 .homePage .block1 .title {
+      top: -19px;
   position: absolute;
   display: -webkit-box;
   display: -ms-flexbox;
