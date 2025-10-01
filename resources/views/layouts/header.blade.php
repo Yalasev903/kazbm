@@ -223,18 +223,15 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-
-    // Открытие модалки по клику на иконку
     const cityIcon = document.querySelector('.extraIcon');
     const cityModal = document.getElementById('cityModal');
 
     if (cityIcon && cityModal) {
         cityIcon.addEventListener('click', () => {
-            cityModal.style.display = 'flex'; // flex для центрирования
+            cityModal.style.display = 'flex';
         });
     }
 
-    // Закрытие модалки по клику на крестик
     const closeBtn = cityModal.querySelector('.city-modal__close');
     if (closeBtn) {
         closeBtn.addEventListener('click', () => {
@@ -242,20 +239,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Закрытие при клике вне контента модалки
     cityModal.addEventListener('click', (event) => {
         if (event.target === cityModal) {
             cityModal.style.display = 'none';
         }
     });
 
-    // Выбор города
     const cityLinks = cityModal.querySelectorAll('.city-modal__item');
 
     cityLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            const citySlug = link.getAttribute('href').split('/').pop(); // выбранный город
+            const citySlug = link.getAttribute('href').split('/').pop();
 
             fetch('{{ route("set.city") }}', {
                 method: 'POST',
@@ -270,17 +265,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.success) {
                     cityModal.style.display = 'none';
 
-                    // Разбираем текущий URL
-                    const urlParts = window.location.pathname.split('/').filter(Boolean);
+                    // Получаем текущий путь без города
+                    let currentPath = window.location.pathname;
 
-                    // Заменяем первый сегмент на новый город
-                    if (urlParts.length > 0) {
-                        urlParts[0] = citySlug;
+                    // Удаляем город из пути, если он есть
+                    currentPath = currentPath.replace(/^\/[^\/]+/, '');
+                    if (currentPath === '') currentPath = '/';
+
+                    // Если выбран не дефолтный город, добавляем его в путь
+                    let newPath = currentPath;
+                    if (citySlug !== 'pavlodar') { // Замените на проверку is_default из базы, если нужно
+                        newPath = '/' + citySlug + currentPath;
                     }
 
-                    // Формируем новый путь
-                    const newPath = '/' + urlParts.join('/');
-                    window.location.href = newPath + window.location.search; // сохраняем query string
+                    // Переходим на новый URL
+                    window.location.href = newPath + window.location.search;
                 } else {
                     alert('Ошибка при выборе города');
                 }

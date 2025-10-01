@@ -143,7 +143,11 @@ class SiteController extends Controller
         $minutes = 30 * 24 * 60;
         Cookie::queue('selected_city', $city->slug, $minutes);
 
-        return response()->json(['success' => true, 'city' => $city->name]);
+        return response()->json([
+            'success' => true,
+            'city' => $city->name,
+            'is_default' => $city->is_default
+        ]);
     }
 
     private function getParamsByPage($page, $request)
