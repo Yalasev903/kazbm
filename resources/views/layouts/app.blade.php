@@ -15,7 +15,18 @@
     <title>{{ $seoTitle ?? config('app.name') }}</title>
     <meta name="description" content="{{ $seoDescription ?? ($page->meta_description ?? '') }}">
     <meta name="keywords" content="{{ $seoKeywords ?? ($page->meta_keywords ?? '') }}">
-    <link rel="canonical" href="{{ url()->current() }}" />
+    {{-- <link rel="canonical" href="{{ url()->current() }}" /> --}}
+    @php
+        $currentPath = request()->path();
+        // Убираем первый сегмент (город), если он есть
+        $segments = explode('/', $currentPath);
+        if (count($segments) > 1 && \App\Models\City::where('slug', $segments[0])->exists()) {
+            array_shift($segments);
+        }
+        $cleanPath = implode('/', $segments);
+        $canonicalUrl = rtrim($canonicalBase . '/' . $cleanPath, '/');
+    @endphp
+    <link rel="canonical" href="{{ $canonicalUrl }}" />
 @if(View::hasSection('seo'))
         @yield('seo')
     @endif

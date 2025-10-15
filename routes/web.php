@@ -25,21 +25,26 @@ use App\Models\City;
 |
 */
 
-use Illuminate\Support\Facades\Http;
+// use Illuminate\Support\Facades\Http;
 
-Route::get('/debug-route', function() {
-    $currentCity = app()->has('currentCity') ? app()->get('currentCity') : null;
-    $route = request()->route();
+// Route::get('/debug-route', function() {
+//     $currentCity = app()->has('currentCity') ? app()->get('currentCity') : null;
+//     $route = request()->route();
 
-    return response()->json([
-        'current_city' => $currentCity ? $currentCity->toArray() : null,
-        'session_city' => session('current_city_slug'),
-        'route_parameters' => $route ? $route->parameters() : [],
-        'request_path' => request()->path(),
-        'request_url' => request()->url(),
-        'all_cities' => \App\Models\City::all()->pluck('slug', 'id')
-    ]);
-});
+//     return response()->json([
+//         'current_city' => $currentCity ? $currentCity->toArray() : null,
+//         'session_city' => session('current_city_slug'),
+//         'route_parameters' => $route ? $route->parameters() : [],
+//         'request_path' => request()->path(),
+//         'request_url' => request()->url(),
+//         'all_cities' => \App\Models\City::all()->pluck('slug', 'id')
+//     ]);
+// });
+
+// Временный маршрут для проверки
+// Route::get('/debug-cities', function() {
+//     return \App\Models\City::all()->pluck('slug', 'id');
+// });
 
 Route::post('/set-city', [SiteController::class, 'setCity'])->name('set.city');
 
@@ -179,7 +184,21 @@ Route::controller(SiteController::class)->group(function () {
 Route::get('/forgot-password/{token}', [AuthController::class, 'forgot'])->name('user.forgot_password');
 Route::get('/order/invoice/{id_hash}', [OrderController::class, 'invoice'])->name('order.invoice.show');
 
+Route::get('/sitemap.xml', function() {
+    $cities = \App\Models\City::all(); // Все города, не только дефолтные
+    $pages = \App\Models\Page::where('status', true)->get();
+    $categories = \App\Models\Category::where('status', true)->get();
+    $articles = \App\Models\Article::where('status', true)->get();
+    $products = \App\Models\Product::where('status', true)->get();
 
+    return response()->view('sitemap', [
+        'cities' => $cities,
+        'pages' => $pages,
+        'categories' => $categories,
+        'articles' => $articles,
+        'products' => $products,
+    ])->header('Content-Type', 'text/xml');
+});
             // Добавьте это в конец файла routes/web.php
 // Route::get('/test-city/{city?}', function ($city = null) {
 //     $currentCity = app('currentCity');

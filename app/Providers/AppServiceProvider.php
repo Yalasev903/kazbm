@@ -59,5 +59,29 @@ class AppServiceProvider extends ServiceProvider
             $cities = City::all();
             $view->with('cities', $cities);
         });
+
+        // Автоматически пинговать при изменении контента
+        $models = [\App\Models\City::class, \App\Models\Page::class, \App\Models\Category::class, \App\Models\Article::class];
+
+        foreach ($models as $model) {
+            $model::saved(function () {
+                \Artisan::call('sitemap:generate');
+            });
+
+            $model::deleted(function () {
+                \Artisan::call('sitemap:generate');
+            });
+        }
+         View::composer('*', function ($view) {
+            $defaultCity = City::where('is_default', true)->first();
+
+            if ($defaultCity) {
+                $canonicalBase = url('/' . $defaultCity->slug);
+            } else {
+                $canonicalBase = url('/');
+            }
+
+            $view->with('canonicalBase', $canonicalBase);
+        });
     }
 }

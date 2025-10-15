@@ -15,7 +15,7 @@
 
                 // Добавляем город к заголовку, если он есть
                 if ($cityH1) {
-                    $mainTitle .= ' в ' . $cityH1;
+                    $mainTitle .= ' ' . $cityH1;
                 }
             @endphp
 
