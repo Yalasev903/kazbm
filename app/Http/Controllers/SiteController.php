@@ -17,25 +17,100 @@ class SiteController extends Controller
 {
 
     # Просмотр страниц
+ # Просмотр страниц
     public function getPage(Request $request, $slug = '/')
     {
+        $currentCity = app('currentCity');
+        $isDefaultCity = $currentCity && $currentCity->is_default;
+
+            // Принудительно устанавливаем город, если он не установлен
+        if (!app()->has('currentCity')) {
+            $defaultCity = City::where('is_default', true)->first() ?? City::first();
+            app()->instance('currentCity', $defaultCity);
+            view()->share('currentCity', $defaultCity);
+        }
 
         $currentCity = app('currentCity');
+        $isDefaultCity = $currentCity && $currentCity->is_default;
 
-       if ($slug === 'catalog') {
-            return redirect()->route('category.city.show', [
-        'city' => app('currentCity')->slug,
-        'slug' => 'giperpressovannyi-kirpic'
+        // Обработка страницы облицовочного кирпича
+        if ($slug === 'oblicovochnyy-kirpich') {
+            \Log::debug('Processing oblicovochnyy-kirpich page', [
+                'city' => $currentCity->slug ?? 'none',
+                'is_default' => $isDefaultCity
             ]);
+
+            $page = Page::where('slug', 'oblicovochnyy-kirpich')
+                        ->where('status', true)
+                        ->first();
+
+            if (!$page) {
+                $page = new \stdClass();
+                $page->type = 'oblic_home';
+                $page->title = 'Облицовочный кирпич';
+                $page->slug = 'oblicovochnyy-kirpich';
+            }
+
+            $seo = $this->buildSeoForPage($currentCity, 'page', $page);
+            $mergeData = $this->getParamsByPage($page, $request);
+
+            \Log::debug('Oblic SEO data', $seo);
+
+            view()->share($seo);
+            return view("pages.$page->type", compact('page'), $mergeData);
         }
+        // Обработка страницы облицовочного кирпича
+        // if ($slug === 'oblicovochnyy-kirpich') {
+        //     $page = Page::where('slug', 'oblicovochnyy-kirpich')
+        //                 ->where('status', true)
+        //                 ->first();
+
+        //     if (!$page) {
+        //         // Если страницы нет в базе, создаем виртуальную
+        //         $page = new \stdClass();
+        //         $page->type = 'oblic_home';
+        //         $page->title = 'Облицовочный кирпич';
+        //         $page->slug = 'oblicovochnyy-kirpich';
+        //     }
+
+        //     $seo = $this->buildSeoForPage($currentCity, 'page', $page);
+        //     $mergeData = $this->getParamsByPage($page, $request);
+
+        //     view()->share($seo);
+        //     return view("pages.$page->type", compact('page'), $mergeData);
+        // }
+
+        // Обработка главной страницы
         $slugToUse = $slug === '/' ? '/' : $slug;
 
-        $page = Page::where('slug', $slugToUse)
-                    ->where('status', true)
-                    ->firstOrFail();
+        // Для главной страницы города по умолчанию используем тип 'home'
+        // Для главной страницы других городов также используем тип 'home'
+        if ($slugToUse === '/') {
+            $page = Page::where('slug', '/')
+                        ->where('status', true)
+                        ->first();
+
+            if (!$page) {
+                $page = new \stdClass();
+                $page->type = 'home';
+                $page->title = 'Главная';
+                $page->slug = '/';
+            }
+        } else {
+            // Для остальных страниц ищем в базе
+            $page = Page::where('slug', $slugToUse)
+                        ->where('status', true)
+                        ->firstOrFail();
+        }
+
+        if ($slug === 'catalog') {
+            return redirect()->route('category.city.show', [
+                'city' => app('currentCity')->slug,
+                'slug' => 'giperpressovannyi-kirpic'
+            ]);
+        }
 
         $seo = $this->buildSeoForPage($currentCity, 'page', $page);
-
         $mergeData = $this->getParamsByPage($page, $request);
 
         view()->share($seo);
@@ -167,7 +242,8 @@ class SiteController extends Controller
             case 'articles':
                 $articles = (new Article)->getList();
                 return compact('articles');
-            case '/':
+            case 'oblicovochnyy-kirpich':
+                // Данные для страницы облицовочного кирпича
                 return [
                     'articles' => (new Article)->getPopular(),
                     'products' => Product::query()
@@ -175,7 +251,17 @@ class SiteController extends Controller
                         ->where('stock', '<>', 0)
                         ->where('status', true)
                         ->where('is_home', true)
-//                        ->limit(4)
+                        ->get()
+                ];
+            case '/':
+                // Данные для главной страницы
+                return [
+                    'articles' => (new Article)->getPopular(),
+                    'products' => Product::query()
+                        ->select(['title', 'photo', 'price', 'size_id', 'color_id', 'category_id', 'data', 'slug'])
+                        ->where('stock', '<>', 0)
+                        ->where('status', true)
+                        ->where('is_home', true)
                         ->get()
                 ];
             default:
@@ -185,6 +271,22 @@ class SiteController extends Controller
 
 private function buildSeoForPage($city, $type, $entity)
 {
+
+    \Log::debug('buildSeoForPage called', [
+        'city' => $city->slug ?? 'none',
+        'type' => $type,
+        'entity_slug' => $entity->slug ?? 'none'
+    ]);
+
+        // Если это страница облицовочного кирпича, используем SEO из города
+        if ($entity->slug === 'oblicovochnyy-kirpich') {
+            return [
+                'seoTitle' => $city->getTranslation('oblic_seo_title', 'ru') ?? $city->oblic_seo_title ?? 'Облицовочный кирпич',
+                'seoDescription' => $city->getTranslation('oblic_meta_description', 'ru') ?? $city->oblic_meta_description ?? '',
+                'seoKeywords' => $city->getTranslation('oblic_meta_keywords', 'ru') ?? $city->oblic_meta_keywords ?? '',
+                'h1' => $city->getTranslation('oblic_h1', 'ru') ?? $city->oblic_h1 ?? 'Облицовочный кирпич',
+            ];
+        }
     // $type: 'page', 'category', 'article', ...
     // $entity: модель (Page, Category, Article)
     $pageSlug = ($type === 'page') ? $entity->slug : $type;

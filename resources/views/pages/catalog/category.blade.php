@@ -85,90 +85,142 @@
                 updatePrice($( ".minVal" ).val(), $( ".maxVal" ).val())
             });
 
-            $(".filter .checkbox input[type='checkbox']").on('change', function (e) {
-                e.preventDefault();
+$(".filter .checkbox input[type='checkbox']").on('change', function (e) {
+    e.preventDefault();
 
-                let sizes = [];
-                $(".checkbox input[type='checkbox']:checked").each(function (index, item) {
-                    sizes.push(item.value);
-                })
+    let sizes = [];
+    $(".checkbox input[type='checkbox']:checked").each(function (index, item) {
+        sizes.push(item.value);
+    })
 
-                let query = localStorage.getItem('productQueryString');
-                let queryString = '';
+    let query = localStorage.getItem('productQueryString');
+    let queryString = '';
 
-                query = new URLSearchParams(query);
+    query = new URLSearchParams(query);
 
-                if (query.has('price') && query.get('price')) {
-                    queryString += '&price=' + query.get('price');
-                }
+    if (query.has('price') && query.get('price')) {
+        queryString += '&price=' + query.get('price');
+    }
 
-                if (query.has('color') && query.get('color')) {
-                    queryString += '&color=' + query.get('color');
-                }
+    if (query.has('color') && query.get('color')) {
+        queryString += '&color=' + query.get('color');
+    }
 
-                if (sizes.length > 0) {
-                    queryString += '&size=' + sizes.join(',');
-                }
-                ajaxRequest(queryString, 1)
-            })
+    if (sizes.length > 0) {
+        queryString += '&size=' + sizes.join(',');
+    }
 
-            $(".filter .elmt").on('click', function (e) {
-                e.preventDefault();
+    // Получаем город и добавляем его
+    const citySlug = $('meta[name="city-slug"]').attr('content');
+    if (citySlug) {
+        queryString += '&city=' + citySlug;
+    }
 
-                let query = localStorage.getItem('productQueryString');
-                let queryString = '';
+    ajaxRequest(queryString, 1)
+})
 
-                query = new URLSearchParams(query);
+$(".filter .elmt").on('click', function (e) {
+    e.preventDefault();
 
-                if (query.has('price') && query.get('price')) {
-                    queryString += '&price=' + query.get('price');
-                }
+    let query = localStorage.getItem('productQueryString');
+    let queryString = '';
 
-                if (query.has('size') && query.get('size')) {
-                    queryString += '&size=' + query.get('size');
-                }
+    query = new URLSearchParams(query);
 
-                var color = query.has('color') ? parseInt(query.get('color')) : 0,
-                    currentValue = color === 0 ? $(this).data('id') : (color === $(this).data('id') ? 0 : $(this).data('id'));
-                if (currentValue !== 0) {
-                    queryString += '&color=' + currentValue
-                }
-                ajaxRequest(queryString, 1)
-            })
+    if (query.has('price') && query.get('price')) {
+        queryString += '&price=' + query.get('price');
+    }
+
+    if (query.has('size') && query.get('size')) {
+        queryString += '&size=' + query.get('size');
+    }
+
+    var color = query.has('color') ? parseInt(query.get('color')) : 0,
+        currentValue = color === 0 ? $(this).data('id') : (color === $(this).data('id') ? 0 : $(this).data('id'));
+    if (currentValue !== 0) {
+        queryString += '&color=' + currentValue
+    }
+
+    // Получаем город и добавляем его
+    const citySlug = $('meta[name="city-slug"]').attr('content');
+    if (citySlug) {
+        queryString += '&city=' + citySlug;
+    }
+
+    ajaxRequest(queryString, 1)
+})
+
+function updatePrice(fromPrice, toPrice) {
+    let query = localStorage.getItem('productQueryString');
+    let queryString = '';
+
+    query = new URLSearchParams(query);
+
+    if (query.has('color') && query.get('color')) {
+        queryString += '&color=' + query.get('color');
+    }
+
+    if (query.has('size') && query.get('size')) {
+        queryString += '&size=' + query.get('size');
+    }
+
+    queryString += '&price=' + fromPrice + ',' + toPrice;
+
+    // Получаем город и добавляем его
+    const citySlug = $('meta[name="city-slug"]').attr('content');
+    if (citySlug) {
+        queryString += '&city=' + citySlug;
+    }
+
+    ajaxRequest(queryString, 1)
+}
 
             getPaginations();
 
-            function getPaginations() {
-                let items = $(".pogination .pagination_item:not('.active')")
-                if (items.length > 0) {
-                    items.each(function () {
-                        $(this).on('click', function (e) {
-                            e.preventDefault();
-                            let urlParams = $(this).data('href').split('?');
-                            var dataType = urlParams[1].split('=')[1];
+function getPaginations() {
+    let items = $(".pogination .pagination_item:not('.active')")
+    if (items.length > 0) {
+        items.each(function () {
+            $(this).on('click', function (e) {
+                e.preventDefault();
 
-                            let query = localStorage.getItem('productQueryString');
-                            let queryString = '';
+                // Получаем URL из data-href
+                let fullUrl = $(this).data('href');
+                let url = new URL(fullUrl);
 
-                            query = new URLSearchParams(query);
+                // Извлекаем номер страницы из параметра 'page'
+                let page = url.searchParams.get('page') || 1;
 
-                            if (query.has('price') && query.get('price')) {
-                                queryString += '&price=' + query.get('price');
-                            }
+                let query = localStorage.getItem('productQueryString');
+                let queryString = '';
 
-                            if (query.has('size') && query.get('size')) {
-                                queryString += '&size=' + query.get('size');
-                            }
+                if (query) {
+                    query = new URLSearchParams(query);
 
-                            if (query.has('color') && query.get('color')) {
-                                queryString += '&color=' + query.get('color');
-                            }
+                    if (query.has('price') && query.get('price')) {
+                        queryString += '&price=' + query.get('price');
+                    }
 
-                            ajaxRequest(queryString, dataType)
-                        })
-                    })
+                    if (query.has('size') && query.get('size')) {
+                        queryString += '&size=' + query.get('size');
+                    }
+
+                    if (query.has('color') && query.get('color')) {
+                        queryString += '&color=' + query.get('color');
+                    }
                 }
-            }
+
+                // 🔑 ДОБАВЛЯЕМ ГОРОД К ЗАПРОСУ
+                const citySlug = $('meta[name="city-slug"]').attr('content');
+                if (citySlug) {
+                    queryString += '&city=' + citySlug;
+                }
+
+                ajaxRequest(queryString, page);
+            });
+        });
+    }
+}
 
             function updatePrice(fromPrice, toPrice) {
                 let query = localStorage.getItem('productQueryString');
@@ -189,18 +241,25 @@
             }
 
             function ajaxRequest(queryString = '', page = 1) {
+                // Получаем текущий город из мета-тега
+                const citySlug = $('meta[name="city-slug"]').attr('content');
+
+                // Добавляем город к queryString
+                let fullQueryString = queryString;
+                if (citySlug) {
+                    fullQueryString += '&city=' + citySlug;
+                }
+
                 $.ajax({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
-                    url: '/ajax/filter/products?page=' + page + queryString,
-                    type: "POST",
+                    url: '/ajax/filter/products?page=' + page + fullQueryString,
+                    type: "GET",
                     success: function(response){
-
                         $(".catalogItems").html(response.html)
                         $(".catalogPage .pogination_block").html(response.paginate)
                         localStorage.setItem('productQueryString', response.query)
-
                         getPaginations()
 
                         $('.card .card_slider').slick({

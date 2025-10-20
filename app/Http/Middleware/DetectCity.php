@@ -10,10 +10,23 @@ class DetectCity
 {
     public function handle(Request $request, Closure $next)
     {
+        // 🔴 ДОБАВЬТЕ ЭТУ ПРОВЕРКУ В САМОЕ НАЧАЛО
+        if ($request->is('ajax/*') || $request->is('api/*')) {
+            $city = City::where('is_default', true)->first() ?? City::first();
+            app()->instance('currentCity', $city);
+            view()->share('currentCity', $city);
+
+            $footerCity = City::where('slug', 'pavlodar')->first() ?? $city;
+            app()->instance('footerCity', $footerCity);
+            view()->share('footerCity', $footerCity);
+
+            return $next($request);
+        }
         // Игнорируем админку, filament и служебные маршруты
         if ($request->is('admin*') ||
             $request->is('filament*') ||
             $request->is('_debugbar*') ||
+            $request->is('ajax*') ||
             (class_exists(\Filament\Facades\Filament::class) && \Filament\Facades\Filament::isServing())) {
             return $next($request);
         }
@@ -101,6 +114,11 @@ class DetectCity
         if ($path === '/' && $city && !$city->is_default) {
             // Если на главной странице выбран не дефолтный город - редиректим на URL с городом
             return redirect("/{$city->slug}");
+        }
+
+        if ($path === '/oblicovochnyy-kirpich' && $city && !$city->is_default) {
+            // Если на странице облицовочного кирпича выбран не дефолтный город - редиректим на URL с городом
+            return redirect("/{$city->slug}/oblicovochnyy-kirpich");
         }
 
         // Шарим текущий город

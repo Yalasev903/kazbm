@@ -13,6 +13,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use App\Models\City;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -28,26 +29,40 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(GeneralSettings $generalSettings): void
     {
-
         Paginator::useBootstrap();
         Paginator::defaultView('components.pagination');
 
         $sizes = (new ProductSize)->getList();
+
+        // Для каталога - все категории
         $categories = Category::query()
             ->where('status', true)
             ->pluck('name', 'slug')
             ->toArray();
 
+        // Для шапки - исключаем категорию "Облицовочный кирпич" если она будет
+        $headerCategories = Category::query()
+            ->where('status', true)
+            ->where('slug', '!=', 'oblicovochnyy-kirpich') // исключаем облицовочный кирпич
+            ->pluck('name', 'slug')
+            ->toArray();
+
         View::share('generalSettings', $generalSettings);
+
         View::composer(['layouts.header'], function ($view) {
             $view->with('cartCount', (new Basket)->getContent()->count());
         });
-        View::composer([
-            'layouts.header',
-            'components.catalog.filter'
-        ], function ($view) use ($categories) {
+
+        // Для шапки - категории без облицовочного кирпича
+        View::composer(['layouts.header'], function ($view) use ($headerCategories) {
+            $view->with('categories', $headerCategories);
+        });
+
+        // Для фильтра в каталоге - все категории
+        View::composer(['components.catalog.filter'], function ($view) use ($categories) {
             $view->with('categories', $categories);
         });
+
         View::composer([
             'pages.calculator',
             'components.blocks.calculator',
@@ -55,6 +70,7 @@ class AppServiceProvider extends ServiceProvider
         ], function ($view) use ($sizes) {
             $view->with('sizes', $sizes);
         });
+
         View::composer('layouts.header', function ($view) {
             $cities = City::all();
             $view->with('cities', $cities);
@@ -72,7 +88,8 @@ class AppServiceProvider extends ServiceProvider
                 \Artisan::call('sitemap:generate');
             });
         }
-         View::composer('*', function ($view) {
+
+        View::composer('*', function ($view) {
             $defaultCity = City::where('is_default', true)->first();
 
             if ($defaultCity) {

@@ -41,14 +41,26 @@
                     items.each(function () {
                         $(this).on('click', function (e) {
                             e.preventDefault();
+
+                            // 🔑 ДОБАВЛЯЕМ ГОРОД К ЗАПРОСУ
+                            const citySlug = $('meta[name="city-slug"]').attr('content');
+                            let queryString = '';
+                            if (citySlug) {
+                                queryString += '&city=' + citySlug;
+                            }
+
                             let urlParams = $(this).data('href').split('?');
                             var dataType = urlParams[1].split('=')[1];
+
+                            // 🔑 ПЕРЕДАЕМ ГОРОД В URL
+                            let url = '/ajax/filter/products?page=' + (dataType ? dataType : 1) + queryString;
+
                             $.ajax({
                                 headers: {
                                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                                 },
-                                url: '/ajax/filter/products?page=' + (dataType ? dataType : 1),
-                                type: "POST",
+                                url: url,
+                                type: "GET", // 🔑 МЕНЯЕМ НА GET (как в каталоге)
                                 success: function(response){
 
                                     $(".searchItems").html(response.html)
@@ -77,7 +89,7 @@
                                         const $activeSlides = $slider.find('.slick-active');
                                         const $nextSlides = $slider.find('.slick-active').next();
                                         const $prevSlides = $slider.find('.slick-active').prev();
-                                        
+
                                         $activeSlides.add($nextSlides).add($prevSlides).find('img[data-lazy]').each(function() {
                                             const $img = $(this);
                                             const src = $img.attr('data-lazy');

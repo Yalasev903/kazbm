@@ -20,19 +20,25 @@
             </div>
             <div class="menu">
 
-                    @if($categories)
-                    <div class="menu_link">
-                        <a class="menu_link" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">{{ __("Каталог") }}</a>
-                        <div class="dropdown">
-                            <div class="dropdown_inner">
-                                @foreach($categories as $slug => $name)
-                                    <a class="dropdown_link" href="{{ city_route('category.city.show', ['slug' => $slug]) }}">{{ $name }}</a>
-                                @endforeach
-                            </div>
+                @if($categories)
+                <div class="menu_link">
+                    <a class="menu_link" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">{{ __("Каталог") }}</a>
+                    <div class="dropdown">
+                        <div class="dropdown_inner">
+                            {{-- Ссылка на главную страницу облицовочного кирпича --}}
+                            {{-- <a class="dropdown_link" href="{{ city_route('oblic.city', ['city' => $currentCity->slug ?? '']) }}">
+                                {{ __("Облицовочный кирпич") }}
+                            </a> --}}
+
+                            {{-- Обычные категории (без облицовочного кирпича) --}}
+                            @foreach($categories as $slug => $name)
+                                <a class="dropdown_link" href="{{ city_route('category.city.show', ['slug' => $slug]) }}">{{ $name }}</a>
+                            @endforeach
                         </div>
                     </div>
+                </div>
                 @else
-                    <a class="menu_link" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">{{ __("Каталог") }}</a>
+                <a class="menu_link" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">{{ __("Каталог") }}</a>
                 @endif
                 <a class="menu_link" href="{{ city_route( 'calculator.city') }}">{{__("Калькулятор")}}</a>
                 <a class="menu_link" href="{{ city_route( 'about.city') }}">{{__("О компании")}}</a>
@@ -40,13 +46,32 @@
                 <a class="menu_link" href="{{ city_route('contacts.city') }}">{{__("Контакты")}}</a>
             </div>
         </div>
-        <div class="header_center">
-            @if(\Illuminate\Support\Facades\URL::current() != url('/'))
-                <a href="/"><img class="logo" src="{{ $generalSettings->getRealFormat('logo_fixed') }}" alt="logo"></a>
-            @else
-                <img class="logo" src="{{ $generalSettings->getRealFormat('logo_fixed') }}" alt="logo">
-            @endif
-        </div>
+            <div class="header_center">
+                @php
+                    $currentCity = app('currentCity');
+                    $isDefaultCity = $currentCity && $currentCity->is_default;
+
+                    // Определяем URL для логотипа
+                    $logoUrl = $isDefaultCity ? url('/') : url('/' . $currentCity->slug);
+
+                    // Проверяем, находимся ли мы на странице облицовочного кирпича
+                    $isOblicPage = request()->is('*oblicovochnyy-kirpich*');
+
+                    // Если находимся на странице облицовочного кирпича, меняем URL логотипа
+                    if ($isOblicPage) {
+                        $logoUrl = $isDefaultCity ? url('/oblicovochnyy-kirpich') : url('/' . $currentCity->slug . '/oblicovochnyy-kirpich');
+                    }
+
+                    // Проверяем, не находимся ли мы уже на целевой странице
+                    $isCurrentPage = request()->url() === $logoUrl;
+                @endphp
+
+                @if(!$isCurrentPage)
+                    <a href="{{ $logoUrl }}"><img class="logo" src="{{ $generalSettings->getRealFormat('logo_fixed') }}" alt="logo"></a>
+                @else
+                    <img class="logo" src="{{ $generalSettings->getRealFormat('logo_fixed') }}" alt="logo">
+                @endif
+            </div>
         <div class="header_right">
             <a class="tel" href="tel:+{{ $generalSettings->getPhone() }}">
                 <svg class="icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -118,7 +143,7 @@
         </div>
     </div>
 </div> --}}
-<div id="cityModal" class="city-modal" style="display: none;">
+{{-- <div id="cityModal" class="city-modal" style="display: none;">
     <div class="city-modal__content">
         <span class="city-modal__close" onclick="closeCityModal()">&times;</span>
         <h2 class="city-modal__title">Выберите город</h2>
@@ -134,8 +159,24 @@
             @endif
         </div>
     </div>
+</div> --}}
+<div id="cityModal" class="city-modal" style="display: none;">
+    <div class="city-modal__content">
+        <span class="city-modal__close" onclick="closeCityModal()">&times;</span>
+        <h2 class="city-modal__title">Выберите город</h2>
+        <div class="city-modal__list">
+            @if(!empty($cities) && $cities->count())
+                @foreach($cities as $city)
+                    <a href="javascript:void(0)" class="city-modal__item" data-city="{{ $city->slug }}">
+                        {{ $city->name }}
+                    </a>
+                @endforeach
+            @else
+                <p class="city-modal__empty">Список городов пуст.</p>
+            @endif
+        </div>
+    </div>
 </div>
-
 </header>
 
 <div class="mobileMenu_bloor" onclick="closeMobileMenu()"></div>
@@ -162,11 +203,17 @@
     </div>
 </div>
 @if($categories)
-    <div class="mobileCatalog">
-        @foreach($categories as $slug => $name)
-            <a class="link" href="{{ city_route('category.city.show', ['slug' => $slug]) }}">{{$name}}</a>
-        @endforeach
-    </div>
+<div class="mobileCatalog">
+    {{-- Ссылка на главную страницу облицовочного кирпича --}}
+    <a class="link" href="{{ city_route('oblic.city', ['city' => $currentCity->slug ?? '']) }}">
+        {{ __("Облицовочный кирпич") }}
+    </a>
+
+    {{-- Обычные категории (без облицовочного кирпича) --}}
+    @foreach($categories as $slug => $name)
+        <a class="link" href="{{ city_route('category.city.show', ['slug' => $slug]) }}">{{$name}}</a>
+    @endforeach
+</div>
 @endif
 <div class="mobileInteractive">
     <div class="icon">
@@ -250,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cityLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            const citySlug = link.getAttribute('href').split('/').pop();
+            const citySlug = link.getAttribute('data-city');
 
             fetch('{{ route("set.city") }}', {
                 method: 'POST',
@@ -265,29 +312,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.success) {
                     cityModal.style.display = 'none';
 
-                    // Получаем текущий путь без города
+                    // Получаем текущий путь
                     let currentPath = window.location.pathname;
+                    const currentSearch = window.location.search;
+
+                    // Определяем тип страницы
+                    const isHomePage = currentPath === '/' || currentPath === '' || (currentPath.split('/').length === 2 && currentPath.split('/')[1] === '');
+                    const isOblicPage = currentPath.includes('oblicovochnyy-kirpich');
+
+                    console.log('Current path:', currentPath, 'Is home:', isHomePage, 'Is oblic:', isOblicPage);
 
                     // Удаляем город из пути, если он есть
                     currentPath = currentPath.replace(/^\/[^\/]+/, '');
                     if (currentPath === '') currentPath = '/';
 
-                    // Если выбран не дефолтный город, добавляем его в путь
-                    let newPath = currentPath;
-                    if (citySlug !== 'pavlodar') { // Замените на проверку is_default из базы, если нужно
-                        newPath = '/' + citySlug + currentPath;
+                    // Формируем новый путь в зависимости от типа страницы
+                    let newPath;
+                    if (isHomePage) {
+                        // Для главной страницы
+                        if (data.is_default) {
+                            newPath = '/';
+                        } else {
+                            newPath = '/' + citySlug;
+                        }
+                    } else if (isOblicPage) {
+                        // Для страницы облицовочного кирпича
+                        if (data.is_default) {
+                            newPath = '/oblicovochnyy-kirpich';
+                        } else {
+                            newPath = '/' + citySlug + '/oblicovochnyy-kirpich';
+                        }
+                    } else {
+                        // Для остальных страниц
+                        if (data.is_default) {
+                            newPath = currentPath;
+                        } else {
+                            newPath = '/' + citySlug + currentPath;
+                        }
                     }
 
+                    console.log('Redirecting to:', newPath + currentSearch);
                     // Переходим на новый URL
-                    window.location.href = newPath + window.location.search;
+                    window.location.href = newPath + currentSearch;
                 } else {
                     alert('Ошибка при выборе города');
                 }
             })
-            .catch(err => console.error('Ошибка:', err));
+            .catch(err => {
+                console.error('Ошибка:', err);
+                alert('Ошибка при выборе города');
+            });
         });
     });
 });
 </script>
-
-

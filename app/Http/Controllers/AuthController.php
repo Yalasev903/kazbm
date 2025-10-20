@@ -16,21 +16,8 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
 
-    public function register(SiteUserRequest $request, SiteUser $siteUser)
+ public function login(LoginRequest $request)
     {
-
-        $siteUser->fill($request->all());
-        $siteUser->password = Hash::make($request->post('password'));
-        if ($siteUser->save()) {
-            return response()->json(['status' => 'success']);
-        }
-
-        return response()->json(['status' => 'error'], 500);
-    }
-
-    public function login(LoginRequest $request)
-    {
-
         $siteUser = SiteUser::query()
             ->where('email', $request->input('login'))
             ->first();
@@ -44,7 +31,49 @@ class AuthController extends Controller
 
         $this->guard()->login($siteUser);
 
-        return response()->json(['status' => 'success']);
+        // Получаем URL для редиректа после успешного входа
+        $redirectUrl = $this->getRedirectUrlAfterLogin();
+
+        return response()->json([
+            'status' => 'success',
+            'redirect_url' => $redirectUrl
+        ]);
+    }
+
+    public function register(SiteUserRequest $request, SiteUser $siteUser)
+    {
+        $siteUser->fill($request->all());
+        $siteUser->password = Hash::make($request->post('password'));
+
+        if ($siteUser->save()) {
+            $this->guard()->login($siteUser);
+
+            // Получаем URL для редиректа после успешной регистрации
+            $redirectUrl = $this->getRedirectUrlAfterLogin();
+
+            return response()->json([
+                'status' => 'success',
+                'redirect_url' => $redirectUrl
+            ]);
+        }
+
+        return response()->json(['status' => 'error'], 500);
+    }
+
+    /**
+     * Получить URL для редиректа после успешного входа/регистрации
+     */
+    private function getRedirectUrlAfterLogin()
+    {
+        $previousUrl = url()->previous();
+
+        // Проверяем, была ли предыдущая страница облицовочным кирпичом
+        if (str_contains($previousUrl, 'oblicovochnyy-kirpich')) {
+            return $previousUrl; // Возвращаем на ту же страницу облицовочного кирпича
+        }
+
+        // Для всех остальных случаев возвращаем на главную
+        return url('/');
     }
 
     public function recovery(Request $request, RecoveryService $recoveryService)

@@ -78,6 +78,33 @@ class CityResource extends Resource
                                     ->label("H1 (kk)")
                                     ->maxLength(255),
                             ]),
+                        Forms\Components\Tabs\Tab::make('SEO для облицовочного кирпича')
+                            ->schema([
+                                Forms\Components\TextInput::make('oblic_seo_title.ru')
+                                    ->label("SEO Title для облицовочного (ru)")
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('oblic_seo_title.kk')
+                                    ->label("SEO Title для облицовочного (kk)")
+                                    ->maxLength(255),
+                                Forms\Components\Textarea::make('oblic_meta_description.ru')
+                                    ->label("Meta Description для облицовочного (ru)")
+                                    ->rows(3),
+                                Forms\Components\Textarea::make('oblic_meta_description.kk')
+                                    ->label("Meta Description для облицовочного (kk)")
+                                    ->rows(3),
+                                Forms\Components\Textarea::make('oblic_meta_keywords.ru')
+                                    ->label("Meta Keywords для облицовочного (ru)")
+                                    ->rows(2),
+                                Forms\Components\Textarea::make('oblic_meta_keywords.kk')
+                                    ->label("Meta Keywords для облицовочного (kk)")
+                                    ->rows(2),
+                                Forms\Components\TextInput::make('oblic_h1.ru')
+                                    ->label("H1 для облицовочного (ru)")
+                                    ->maxLength(255),
+                                Forms\Components\TextInput::make('oblic_h1.kk')
+                                    ->label("H1 для облицовочного (kk)")
+                                    ->maxLength(255),
+                            ]),
                     ])
             ]);
     }

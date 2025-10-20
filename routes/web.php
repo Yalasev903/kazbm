@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use App\Models\City;
+use Illuminate\Support\Facades\Http;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,8 +65,8 @@ Route::prefix('ajax')
                 Route::post('/search/products', 'search')->name('product.search');
 
                 # get Filter data
-                Route::post('/filter/products','products')->name('product.get');
-
+                #Route::post('/filter/products','products')->name('product.get');
+                Route::get('/filter/products','products')->name('product.get');
                 # set Pagination
                 Route::post('/pagination/articles','articles')->name('article.pagination');
             });
@@ -117,6 +118,19 @@ Route::get('/set-lang/{lang}', function ($lang) {
     return redirect()->back();
 })->name("lang.change");
 
+// Явные маршруты для облицовочного кирпича без города - ПЕРЕД группой с городами!
+Route::get('/oblicovochnyy-kirpich', function(){
+    $defaultCity = City::where('is_default', true)->first() ?? City::first();
+    app()->instance('currentCity', $defaultCity);
+    view()->share('currentCity', $defaultCity);
+
+    $footerCity = City::where('slug', 'pavlodar')->first() ?? $defaultCity;
+    app()->instance('footerCity', $footerCity);
+    view()->share('footerCity', $footerCity);
+
+    return app(SiteController::class)->getPage(request(), 'oblicovochnyy-kirpich');
+})->name('oblic.default');
+
 // Главная страница без города
 Route::get('/', function () {
     $defaultCity = City::where('is_default', true)->first() ?? City::first();
@@ -132,12 +146,19 @@ Route::get('/', function () {
     return app(\App\Http\Controllers\SiteController::class)->getPage(request(), '/');
 });
 
+
 Route::group(['prefix' => '{city}', 'middleware' => ['detect.city']], function () {
 
     // Главная страница (городная версия)
     Route::get('/', function($city){
         return app(SiteController::class)->getPage(request(), '/');
     })->name('home.city');
+
+    // Главная страница (Облицовочный кирпич)
+    Route::get('/oblicovochnyy-kirpich', function($city){
+        \Log::debug('oblic city route', ['city' => $city, 'slug' => 'oblicovochnyy-kirpich']);
+        return app(SiteController::class)->getPage(request(), 'oblicovochnyy-kirpich');
+    })->name('oblic.city');
 
     // Статические страницы
     Route::get('/about', fn($city) => app(SiteController::class)->getPage(request(), 'about'))->name('about.city');
@@ -170,16 +191,20 @@ Route::group(['prefix' => '{city}', 'middleware' => ['detect.city']], function (
 //     return redirect("/{$defaultCity->slug}");
 // });
 
-// legacy маршруты только для fallback (если нет city)
+// Явные маршруты для облицовочного кирпича без города - ДО legacy маршрутов!
+// Route::get('/oblicovochnyy-kirpich', function(){
+//     return app(SiteController::class)->getPage(request(), 'oblicovochnyy-kirpich');
+// })->name('oblic.default')->middleware('detect.city'); // добавил middleware
+
+// legacy маршруты только для fallback (исключая oblicovochnyy-kirpich)
 Route::controller(SiteController::class)->group(function () {
     Route::get('/{page}', 'getPage')
-        ->where('page', '^(?!profile/|ajax|forgot-password|order/invoice).+')
+        ->where('page', '^(?!oblicovochnyy-kirpich|profile/|ajax|forgot-password|order/invoice).+')
          ->name('pages.get');
     Route::get('/articles/{slug}', 'getArticle')->name('article.show');
     Route::get('/catalog/{slug}', 'getCategory')->name('category.show');
     Route::get('/catalog/{category}/{slug}', 'getProduct')->name('product.show');
 });
-
 
 Route::get('/forgot-password/{token}', [AuthController::class, 'forgot'])->name('user.forgot_password');
 Route::get('/order/invoice/{id_hash}', [OrderController::class, 'invoice'])->name('order.invoice.show');

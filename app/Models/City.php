@@ -19,9 +19,33 @@ class City extends Model
         "seo_title",
         "meta_description",
         "meta_keywords",
-        "h1"
+        "h1",
+        "oblic_seo_title",
+        "oblic_meta_description",
+        "oblic_meta_keywords",
+        "oblic_h1",
+        "oblic_content"
     ];
 
-    public $translatable = ['name', 'seo_title', 'meta_description', 'meta_keywords', 'h1'];
+    public $translatable = [
+        'name',
+         'seo_title',
+         'meta_description',
+        'meta_keywords',
+        'h1',
+        'oblic_seo_title',
+        'oblic_meta_description',
+        'oblic_meta_keywords',
+        'oblic_h1',
+        'oblic_content'];
+
+    protected $casts = [
+        // существующие касты...
+        'oblic_seo_title' => 'array',
+        'oblic_meta_description' => 'array',
+        'oblic_meta_keywords' => 'array',
+        'oblic_h1' => 'array',
+        'oblic_content' => 'array',
+    ];
 
 }

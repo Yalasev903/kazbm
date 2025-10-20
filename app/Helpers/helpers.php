@@ -7,12 +7,18 @@ if (! function_exists('city_route')) {
 
         // Для главной страницы
         if ($name === 'home.city') {
-            // Если город дефолтный - используем URL без города
             if ($city && $city->is_default) {
-                return route('home');
+                return url('/');
             }
-            // Если город не дефолтный - используем URL с городом
-            return route('home.city', ['city' => $city->slug]);
+            return url('/' . $city->slug);
+        }
+
+        // Для страницы облицовочного кирпича
+        if ($name === 'oblic.city') {
+            if ($city && $city->is_default) {
+                return url('/oblicovochnyy-kirpich');
+            }
+            return url('/' . $city->slug . '/oblicovochnyy-kirpich');
         }
 
         // Для остальных страниц

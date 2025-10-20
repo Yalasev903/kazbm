@@ -97,7 +97,6 @@ class Product extends Model
 
     public function getCatalogData(Request $request, ?int $categoryId = null): array
     {
-
         $productQuery = Product::query()
             ->with(['pattern'])
             ->select(['id', 'title', 'slug', 'size_id', 'price', 'color_id', 'category_id', 'pattern_id', 'stock', 'galleries'])
