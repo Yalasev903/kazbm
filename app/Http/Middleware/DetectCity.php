@@ -121,6 +121,9 @@ class DetectCity
             return redirect("/{$city->slug}/oblicovochnyy-kirpich");
         }
 
+        if ($path === '/oblicovochnyy-kirpich/contacts' && $city && !$city->is_default) {
+            return redirect("/{$city->slug}/oblicovochnyy-kirpich/contacts");
+        }
         // Шарим текущий город
         app()->instance('currentCity', $city);
         view()->share('currentCity', $city);

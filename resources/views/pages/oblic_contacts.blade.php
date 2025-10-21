@@ -9,9 +9,9 @@
     <div class="container">
         @include('components.breadcrumbs')
 
-        {{-- H1: добавляем город --}}
+        {{-- H1 с использованием oblic_h1 --}}
         <div class="titles">
-            {{ $page->sub_title ?: $page->title }}@if($currentCity) {{ $currentCity->seo_title }}@endif
+            {{ $page->sub_title ?: $page->title }}@if($currentCity) {{ $currentCity->getTranslation('oblic_h1', App::getLocale()) ?? $currentCity->getTranslation('h1', App::getLocale()) }}@endif
         </div>
 
         <div class="items">

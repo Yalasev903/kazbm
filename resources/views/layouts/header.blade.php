@@ -1,6 +1,8 @@
 <header class="header">
     <div class="container">
-        @php $currentCity = app('currentCity'); @endphp
+        @php $currentCity = app('currentCity');
+             $isOblicSection = request()->is('*oblicovochnyy-kirpich*');
+        @endphp
             <form class="searchPlatform" action="{{ city_route('pages.city.get', ['slug' => 'search']) }}" method="get">
             <input type="text" placeholder="{{__("Поисковый запрос")}}" name="query">
             <button type="submit" class="search">
@@ -26,9 +28,9 @@
                     <div class="dropdown">
                         <div class="dropdown_inner">
                             {{-- Ссылка на главную страницу облицовочного кирпича --}}
-                            {{-- <a class="dropdown_link" href="{{ city_route('oblic.city', ['city' => $currentCity->slug ?? '']) }}">
+                            <a class="dropdown_link" href="{{ city_route('oblic.city', ['city' => $currentCity->slug ?? '']) }}">
                                 {{ __("Облицовочный кирпич") }}
-                            </a> --}}
+                            </a>
 
                             {{-- Обычные категории (без облицовочного кирпича) --}}
                             @foreach($categories as $slug => $name)
@@ -41,9 +43,18 @@
                 <a class="menu_link" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">{{ __("Каталог") }}</a>
                 @endif
                 <a class="menu_link" href="{{ city_route( 'calculator.city') }}">{{__("Калькулятор")}}</a>
-                <a class="menu_link" href="{{ city_route( 'about.city') }}">{{__("О компании")}}</a>
+               {{-- Ссылка "О компании" в зависимости от раздела --}}
+                @if($isOblicSection)
+                    <a class="menu_link" href="{{ city_route('oblic.about.city', ['city' => $currentCity->slug ?? '']) }}">{{__("О компании")}}</a>
+                @else
+                    <a class="menu_link" href="{{ city_route('about.city') }}">{{__("О компании")}}</a>
+                @endif
                 <a class="menu_link" href="{{ city_route('pages.city.get', ['slug' => 'articles']) }}">{{__("Статьи")}}</a>
-                <a class="menu_link" href="{{ city_route('contacts.city') }}">{{__("Контакты")}}</a>
+                @if(request()->is('*oblicovochnyy-kirpich*'))
+                    <a href="{{ oblic_contacts_route() }}">Контакты</a>
+                @else
+                    <a href="{{ city_route('contacts.city') }}">Контакты</a>
+                @endif
             </div>
         </div>
             <div class="header_center">
@@ -189,9 +200,18 @@
             </svg>
         </div>
         <a class="link" href="{{ city_route('calculator.city') }}">{{__("Калькулятор")}}</a>
-        <a class="link" href="{{ city_route('about.city') }}">{{__("О компании")}}</a>
+        {{-- Мобильное меню: ссылки в зависимости от раздела --}}
+        @if($isOblicSection)
+            <a class="link" href="{{ city_route('oblic.about.city', ['city' => $currentCity->slug ?? '']) }}">{{__("О компании")}}</a>
+        @else
+            <a class="link" href="{{ city_route('about.city') }}">{{__("О компании")}}</a>
+        @endif
         <a class="link" href="{{ city_route('pages.city.get', ['slug' => 'articles']) }}">{{__("Статьи")}}</a>
-        <a class="link" href="{{ city_route('contacts.city') }}">{{__("Контакты")}}</a>
+        @if(request()->is('*oblicovochnyy-kirpich*'))
+            <a href="{{ oblic_contacts_route() }}">Контакты</a>
+        @else
+            <a href="{{ city_route('contacts.city') }}">Контакты</a>
+        @endif
 
         <a class="link" href="{{ route('lang.change', app()->getLocale() === 'ru' ? 'kk' : 'ru') }}">
             {{ app()->getLocale() === 'ru' ? 'Қазақ' : 'Русский' }}
@@ -269,6 +289,7 @@
     </div>
 </div>
 <script>
+// В header.blade.php в секции script
 document.addEventListener('DOMContentLoaded', () => {
     const cityIcon = document.querySelector('.extraIcon');
     const cityModal = document.getElementById('cityModal');
@@ -316,34 +337,84 @@ document.addEventListener('DOMContentLoaded', () => {
                     let currentPath = window.location.pathname;
                     const currentSearch = window.location.search;
 
+                    console.log('Current path before processing:', currentPath);
+
                     // Определяем тип страницы
-                    const isHomePage = currentPath === '/' || currentPath === '' || (currentPath.split('/').length === 2 && currentPath.split('/')[1] === '');
+                    const isHomePage = currentPath === '/' || currentPath === '' ||
+                                     (currentPath.split('/').length === 2 && currentPath.split('/')[1] === '');
+
+                    // Для страниц с городом в URL
+                    const pathParts = currentPath.split('/').filter(part => part !== '');
+                    const hasCityInPath = pathParts.length > 0 &&
+                                        !['oblicovochnyy-kirpich', 'about', 'our-products', 'contacts',
+                                          'catalog', 'articles', 'calculator'].includes(pathParts[0]);
+
+                    const currentCityInPath = hasCityInPath ? pathParts[0] : null;
+
+                    // Определяем oblic страницы
                     const isOblicPage = currentPath.includes('oblicovochnyy-kirpich');
+                    const isOblicAboutPage = currentPath.includes('oblicovochnyy-kirpich/about');
+                    const isOblicOurProductsPage = currentPath.includes('oblicovochnyy-kirpich/our-products');
+                    const isOblicContactsPage = currentPath.includes('oblicovochnyy-kirpich/contacts');
 
-                    console.log('Current path:', currentPath, 'Is home:', isHomePage, 'Is oblic:', isOblicPage);
+                    console.log('Page detection:', {
+                        isHomePage,
+                        hasCityInPath,
+                        currentCityInPath,
+                        isOblicPage,
+                        isOblicAboutPage,
+                        isOblicOurProductsPage,
+                        isOblicContactsPage
+                    });
 
-                    // Удаляем город из пути, если он есть
-                    currentPath = currentPath.replace(/^\/[^\/]+/, '');
-                    if (currentPath === '') currentPath = '/';
+                    // Удаляем текущий город из пути, если он есть
+                    if (hasCityInPath && currentCityInPath) {
+                        currentPath = currentPath.replace('/' + currentCityInPath, '');
+                        if (currentPath === '') currentPath = '/';
+                    }
 
-                    // Формируем новый путь в зависимости от типа страницы
+                    console.log('Path after city removal:', currentPath);
+
+                    // Формируем новый путь
                     let newPath;
+
                     if (isHomePage) {
-                        // Для главной страницы
+                        // Главная страница
                         if (data.is_default) {
                             newPath = '/';
                         } else {
                             newPath = '/' + citySlug;
                         }
+                    } else if (isOblicAboutPage) {
+                        // Страница "О компании" облицовочного кирпича
+                        if (data.is_default) {
+                            newPath = '/oblicovochnyy-kirpich/about';
+                        } else {
+                            newPath = '/' + citySlug + '/oblicovochnyy-kirpich/about';
+                        }
+                    } else if (isOblicOurProductsPage) {
+                        // Страница "Наша продукция" облицовочного кирпича
+                        if (data.is_default) {
+                            newPath = '/oblicovochnyy-kirpich/our-products';
+                        } else {
+                            newPath = '/' + citySlug + '/oblicovochnyy-kirpich/our-products';
+                        }
+                    } else if (isOblicContactsPage) {
+                        // Страница контактов облицовочного кирпича
+                        if (data.is_default) {
+                            newPath = '/oblicovochnyy-kirpich/contacts';
+                        } else {
+                            newPath = '/' + citySlug + '/oblicovochnyy-kirpich/contacts';
+                        }
                     } else if (isOblicPage) {
-                        // Для страницы облицовочного кирпича
+                        // Главная страница облицовочного кирпича
                         if (data.is_default) {
                             newPath = '/oblicovochnyy-kirpich';
                         } else {
                             newPath = '/' + citySlug + '/oblicovochnyy-kirpich';
                         }
                     } else {
-                        // Для остальных страниц
+                        // Все остальные страницы
                         if (data.is_default) {
                             newPath = currentPath;
                         } else {
@@ -352,6 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     console.log('Redirecting to:', newPath + currentSearch);
+
                     // Переходим на новый URL
                     window.location.href = newPath + currentSearch;
                 } else {

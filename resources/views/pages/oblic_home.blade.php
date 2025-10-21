@@ -10,9 +10,9 @@
         <img class="bg2" src="{{ asset('images/icons/hpb5_bg.svg') }}" alt="hpb5 icon">
         <div class="container">
             @include('components.blocks.oblic_hero')
-            @include('components.blocks.catalog')
+            @include('components.blocks.oblic_catalog')
             @include('components.blocks.calculator', ['icon_name' => 'home_w'])
-            @include('components.blocks.advantage')
+            @include('components.blocks.oblic_advantage')
             <div class="block5">
                 @php $productSettings = app(\App\Filament\Settings\About\ProductSettings::class) @endphp
                 @if($productSettings->title)
@@ -62,9 +62,9 @@
                             <source srcset="{{ asset('images/hpb5_3.webp') }}" type="image/pjp2">
                             <img src="{{ asset('images/hpb5_3.png') }}" alt="hpb5_3 image" loading="lazy">
                         </picture>
-                        <a class="btn" href="{{ route('pages.city.get', [
+                        <a class="btn" href="{{ city_route('pages.city.get', [
                             'city' => app()->get('currentCity')->slug ?? session('current_city_slug'),
-                            'slug' => 'about'
+                            'slug' => 'oblicovochnyy-kirpich/about'
                         ]) }}">{{__("Узнать больше")}}/
                         </a>
                     </div>
