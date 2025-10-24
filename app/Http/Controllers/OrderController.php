@@ -15,6 +15,12 @@ use Illuminate\Support\Facades\Mail;
 
 class OrderController extends CartController
 {
+       private $mailService;
+
+    public function __construct(MailService $mailService)
+    {
+        $this->mailService = $mailService;
+    }
     public function invoice(Request $request)
     {
         $invoice = OrderInvoice::query()
@@ -28,13 +34,15 @@ class OrderController extends CartController
             ->stream("invoice-" . now()->format('Y-m-d_H_i') . ".pdf");
     }
 
-	
+
     public function store(OrderRequest $request, Order $order)
     {
         $order->fill($request->validated());
         $order->products = $this->cart()->getContent();
 
         if ($order->save()) {
+
+            $this->sendOrderNotification($order);
             if ($order->isPaymentInvoice()) {
                 $orderInvoice = $this->createInvoice($order->id);
                 event(new PaymentInvoiceEvent($orderInvoice));
@@ -101,7 +109,7 @@ class OrderController extends CartController
  $payload = [
     'shop_id' => $shopId,
     'account_id' => (string) ($order->user_id ?? 'guest'),
-    'invoice_id' => str_pad($order->id, 8, '0', STR_PAD_LEFT), 
+    'invoice_id' => str_pad($order->id, 8, '0', STR_PAD_LEFT),
     'amount' => (int) ($order->getData('total')),
     'language' => 'rus',
     'description' => 'Оплата заказа №' . $order->id,
@@ -131,85 +139,164 @@ class OrderController extends CartController
         return null;
     }
 
-public function paymentWebhook(Request $request)
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Events\PaymentInvoiceEvent;
+use App\Http\Requests\OrderRequest;
+use App\Models\Order;
+use App\Models\OrderHistory;
+use App\Models\OrderInvoice;
+use App\Services\MailService;
+use App\Models\Entities\MailEntity;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+class OrderController extends CartController
 {
-    Log::info('Webhook received:', $request->all());
+    private $mailService;
 
-    $invoiceId = $request->input('invoiceId');
-    $paymentStatus = $request->input('reason');
-
-    if (!$invoiceId || !$paymentStatus) {
-        Log::warning('Webhook: Missing invoiceId or reason');
-        return response()->json(['error' => 'Invalid payload'], 400);
+    public function __construct(MailService $mailService)
+    {
+        $this->mailService = $mailService;
     }
 
-    $orderId = ltrim($invoiceId, '0');
-    $order = Order::find($orderId);
+    // ... остальные методы остаются без изменений ...
 
-    if (!$order) {
-        Log::warning("Webhook: Order not found with ID {$orderId}");
-        return response()->json(['error' => 'Order not found'], 404);
-    }
-
-    if (strtolower($paymentStatus) === 'success') {
-        $order->status = 1;
-        $order->save();
-
-        $products = $order->products ?? [];
-        $productList = '';
-        foreach ($products as $product) {
-            $name = $product['name'] ?? 'Товар';
-            $qty = $product['quantity'] ?? 1;
-            $price = number_format($product['price'] ?? 0, 0, '.', ' ');
-            $productList .= "▪️ {$name} — {$qty} шт. × {$price} ₸\n";
-        }
-
-$total = number_format($order->getData("total") ?? 0, 0, '.', ' ');
-      $name = $order->name ?? 'Имя не указано';
-$surname = $order->surname ?? 'Фамилия не указана';
-
-$message = "✅ *Оплата подтверждена!*\n\n"
-    . "*Номер заказа:* `{$order->id}`\n"
-	. "*Cумма:* `{$total} ₸`\n"
-	. "*Адрес:* `{$order->getData("org_address")}`\n"
-    . "*Имя:* `{$name}`\n"
-    . "*Фамилия:* `{$surname}`\n"
-    . "*Email:* `{$order->email}`\n"
-    . "*Телефон:* `{$order->phone}`\n\n"
-    . "*Состав заказа:*\n"
-    . "{$productList}";
-
-
+    // 🔴 ОБНОВЛЯЕМ МЕТОД ДЛЯ ОТПРАВКИ УВЕДОМЛЕНИЙ О ЗАКАЗАХ
+    private function sendOrderNotification(Order $order)
+    {
         try {
-    $token = env('TG_BOT_TOKEN'); // или напрямую подставь, если env не работает
-    $channelId = '-1002352982230'; // ⚠️ правильный chat_id из getUpdates
-    Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
-        'chat_id' => $channelId,
-        'text' => $message,
-        'parse_mode' => 'Markdown',
-    ]);
-} catch (\Exception $e) {
-    Log::error("Telegram send error: " . $e->getMessage());
-}
+            $products = $order->products ?? [];
+            $productList = '';
+            foreach ($products as $product) {
+                $name = $product['name'] ?? 'Товар';
+                $qty = $product['quantity'] ?? 1;
+                $price = number_format($product['price'] ?? 0, 0, '.', ' ');
+                $productList .= "▪️ {$name} — {$qty} шт. × {$price} ₸\n";
+            }
 
-        try {
-            // Отправка на email
-            Mail::raw($message, function ($mail) {
-                $mail->to('vixeno5782@cristout.com')
-                     ->subject('✅ Оплата подтверждена');
-            });
+            $total = number_format($order->getData("total") ?? 0, 0, '.', ' ');
+            $name = $order->name ?? 'Имя не указано';
+            $surname = $order->surname ?? 'Фамилия не указана';
+
+            $message = "🛒 *Новый заказ!*\n\n"
+                . "*Номер заказа:* `{$order->id}`\n"
+                . "*Сумма:* `{$total} ₸`\n"
+                . "*Адрес:* `{$order->getData("org_address")}`\n"
+                . "*Имя:* `{$name}`\n"
+                . "*Фамилия:* `{$surname}`\n"
+                . "*Email:* `{$order->email}`\n"
+                . "*Телефон:* `{$order->phone}`\n\n"
+                . "*Состав заказа:*\n"
+                . "{$productList}";
+
+            // Отправка в Telegram
+            $token = env('TG_BOT_TOKEN');
+            $channelId = '-1002352982230';
+            Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                'chat_id' => $channelId,
+                'text' => $message,
+                'parse_mode' => 'Markdown',
+            ]);
+
+            // Отправка на почту через MailService (старый рабочий способ)
+            $mailEntity = new MailEntity();
+            $mailEntity->sendTo = 'sale@kazbm.kz';
+            $mailEntity->sendFrom = 'sale@kazbm.kz';
+            $mailEntity->subject = '🛒 Новый заказ на сайте';
+            $mailEntity->message = $message;
+            $this->mailService->send($mailEntity);
+
+            Log::info("Уведомление о новом заказе №{$order->id} отправлено");
+
         } catch (\Exception $e) {
-            Log::error("Email send error: " . $e->getMessage());
+            Log::error("Ошибка отправки уведомления о заказе: " . $e->getMessage());
         }
-
-        return response()->json(['success' => true]);
     }
 
-    return response()->json(['status' => 'ignored']);
+    public function paymentWebhook(Request $request)
+    {
+        Log::info('Webhook received:', $request->all());
+
+        $invoiceId = $request->input('invoiceId');
+        $paymentStatus = $request->input('reason');
+
+        if (!$invoiceId || !$paymentStatus) {
+            Log::warning('Webhook: Missing invoiceId or reason');
+            return response()->json(['error' => 'Invalid payload'], 400);
+        }
+
+        $orderId = ltrim($invoiceId, '0');
+        $order = Order::find($orderId);
+
+        if (!$order) {
+            Log::warning("Webhook: Order not found with ID {$orderId}");
+            return response()->json(['error' => 'Order not found'], 404);
+        }
+
+        if (strtolower($paymentStatus) === 'success') {
+            $order->status = 1;
+            $order->save();
+
+            $products = $order->products ?? [];
+            $productList = '';
+            foreach ($products as $product) {
+                $name = $product['name'] ?? 'Товар';
+                $qty = $product['quantity'] ?? 1;
+                $price = number_format($product['price'] ?? 0, 0, '.', ' ');
+                $productList .= "▪️ {$name} — {$qty} шт. × {$price} ₸\n";
+            }
+
+            $total = number_format($order->getData("total") ?? 0, 0, '.', ' ');
+            $name = $order->name ?? 'Имя не указано';
+            $surname = $order->surname ?? 'Фамилия не указана';
+
+            $message = "✅ *Оплата подтверждена!*\n\n"
+                . "*Номер заказа:* `{$order->id}`\n"
+                . "*Cумма:* `{$total} ₸`\n"
+                . "*Адрес:* `{$order->getData("org_address")}`\n"
+                . "*Имя:* `{$name}`\n"
+                . "*Фамилия:* `{$surname}`\n"
+                . "*Email:* `{$order->email}`\n"
+                . "*Телефон:* `{$order->phone}`\n\n"
+                . "*Состав заказа:*\n"
+                . "{$productList}";
+
+            try {
+                $token = env('TG_BOT_TOKEN');
+                $channelId = '-1002352982230';
+                Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                    'chat_id' => $channelId,
+                    'text' => $message,
+                    'parse_mode' => 'Markdown',
+                ]);
+            } catch (\Exception $e) {
+                Log::error("Telegram send error: " . $e->getMessage());
+            }
+
+            try {
+                // Отправка на email через MailService (старый рабочий способ)
+                $mailEntity = new MailEntity();
+                $mailEntity->sendTo = 'sale@kazbm.kz'; // Меняем на правильный email
+                $mailEntity->sendFrom = 'sale@kazbm.kz';
+                $mailEntity->subject = '✅ Оплата подтверждена';
+                $mailEntity->message = $message;
+                $this->mailService->send($mailEntity);
+            } catch (\Exception $e) {
+                Log::error("Email send error: " . $e->getMessage());
+            }
+
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['status' => 'ignored']);
+    }
 }
 
-
-	
     protected function createInvoice(int $orderId)
     {
         $user = $this->cart()->user();
@@ -221,5 +308,55 @@ $message = "✅ *Оплата подтверждена!*\n\n"
         $invoice->save();
 
         return $invoice;
+    }
+
+    // 🔴 ДОБАВЛЯЕМ НОВЫЙ МЕТОД ДЛЯ ОТПРАВКИ УВЕДОМЛЕНИЙ О ЗАКАЗАХ
+    private function sendOrderNotification(Order $order)
+    {
+        try {
+            $products = $order->products ?? [];
+            $productList = '';
+            foreach ($products as $product) {
+                $name = $product['name'] ?? 'Товар';
+                $qty = $product['quantity'] ?? 1;
+                $price = number_format($product['price'] ?? 0, 0, '.', ' ');
+                $productList .= "▪️ {$name} — {$qty} шт. × {$price} ₸\n";
+            }
+
+            $total = number_format($order->getData("total") ?? 0, 0, '.', ' ');
+            $name = $order->name ?? 'Имя не указано';
+            $surname = $order->surname ?? 'Фамилия не указана';
+
+            $message = "🛒 *Новый заказ!*\n\n"
+                . "*Номер заказа:* `{$order->id}`\n"
+                . "*Сумма:* `{$total} ₸`\n"
+                . "*Адрес:* `{$order->getData("org_address")}`\n"
+                . "*Имя:* `{$name}`\n"
+                . "*Фамилия:* `{$surname}`\n"
+                . "*Email:* `{$order->email}`\n"
+                . "*Телефон:* `{$order->phone}`\n\n"
+                . "*Состав заказа:*\n"
+                . "{$productList}";
+
+            // Отправка в Telegram
+            $token = env('TG_BOT_TOKEN');
+            $channelId = '-1002352982230';
+            Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                'chat_id' => $channelId,
+                'text' => $message,
+                'parse_mode' => 'Markdown',
+            ]);
+
+            // Отправка на почту
+            \Illuminate\Support\Facades\Mail::raw($message, function ($mail) {
+                $mail->to('sale@kazbm.kz')
+                    ->subject('🛒 Новый заказ на сайте');
+            });
+
+            Log::info("Уведомление о новом заказе №{$order->id} отправлено");
+
+        } catch (\Exception $e) {
+            Log::error("Ошибка отправки уведомления о заказе: " . $e->getMessage());
+        }
     }
 }
