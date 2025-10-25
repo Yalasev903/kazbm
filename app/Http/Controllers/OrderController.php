@@ -139,33 +139,6 @@ class OrderController extends CartController
         return null;
     }
 
-<?php
-
-namespace App\Http\Controllers;
-
-use App\Events\PaymentInvoiceEvent;
-use App\Http\Requests\OrderRequest;
-use App\Models\Order;
-use App\Models\OrderHistory;
-use App\Models\OrderInvoice;
-use App\Services\MailService;
-use App\Models\Entities\MailEntity;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-
-class OrderController extends CartController
-{
-    private $mailService;
-
-    public function __construct(MailService $mailService)
-    {
-        $this->mailService = $mailService;
-    }
-
-    // ... остальные методы остаются без изменений ...
-
     // 🔴 ОБНОВЛЯЕМ МЕТОД ДЛЯ ОТПРАВКИ УВЕДОМЛЕНИЙ О ЗАКАЗАХ
     private function sendOrderNotification(Order $order)
     {
@@ -183,6 +156,9 @@ class OrderController extends CartController
             $name = $order->name ?? 'Имя не указано';
             $surname = $order->surname ?? 'Фамилия не указана';
 
+            // Форматируем телефон для кликабельной ссылки
+            $phoneLink = TelegramHelper::createPhoneLink($order->phone);
+
             $message = "🛒 *Новый заказ!*\n\n"
                 . "*Номер заказа:* `{$order->id}`\n"
                 . "*Сумма:* `{$total} ₸`\n"
@@ -190,7 +166,7 @@ class OrderController extends CartController
                 . "*Имя:* `{$name}`\n"
                 . "*Фамилия:* `{$surname}`\n"
                 . "*Email:* `{$order->email}`\n"
-                . "*Телефон:* `{$order->phone}`\n\n"
+                . "*Телефон:* {$phoneLink}\n\n"
                 . "*Состав заказа:*\n"
                 . "{$productList}";
 
@@ -201,9 +177,10 @@ class OrderController extends CartController
                 'chat_id' => $channelId,
                 'text' => $message,
                 'parse_mode' => 'Markdown',
+                'disable_web_page_preview' => true,
             ]);
 
-            // Отправка на почту через MailService (старый рабочий способ)
+            // Отправка на почту через MailService
             $mailEntity = new MailEntity();
             $mailEntity->sendTo = 'sale@kazbm.kz';
             $mailEntity->sendFrom = 'sale@kazbm.kz';
@@ -255,6 +232,9 @@ class OrderController extends CartController
             $name = $order->name ?? 'Имя не указано';
             $surname = $order->surname ?? 'Фамилия не указана';
 
+            // Форматируем телефон для кликабельной ссылки
+            $phoneLink = TelegramHelper::createPhoneLink($order->phone);
+
             $message = "✅ *Оплата подтверждена!*\n\n"
                 . "*Номер заказа:* `{$order->id}`\n"
                 . "*Cумма:* `{$total} ₸`\n"
@@ -262,7 +242,7 @@ class OrderController extends CartController
                 . "*Имя:* `{$name}`\n"
                 . "*Фамилия:* `{$surname}`\n"
                 . "*Email:* `{$order->email}`\n"
-                . "*Телефон:* `{$order->phone}`\n\n"
+                . "*Телефон:* {$phoneLink}\n\n"
                 . "*Состав заказа:*\n"
                 . "{$productList}";
 
@@ -273,15 +253,16 @@ class OrderController extends CartController
                     'chat_id' => $channelId,
                     'text' => $message,
                     'parse_mode' => 'Markdown',
+                    'disable_web_page_preview' => true,
                 ]);
             } catch (\Exception $e) {
                 Log::error("Telegram send error: " . $e->getMessage());
             }
 
             try {
-                // Отправка на email через MailService (старый рабочий способ)
+                // Отправка на email через MailService
                 $mailEntity = new MailEntity();
-                $mailEntity->sendTo = 'sale@kazbm.kz'; // Меняем на правильный email
+                $mailEntity->sendTo = 'sale@kazbm.kz';
                 $mailEntity->sendFrom = 'sale@kazbm.kz';
                 $mailEntity->subject = '✅ Оплата подтверждена';
                 $mailEntity->message = $message;
@@ -308,55 +289,5 @@ class OrderController extends CartController
         $invoice->save();
 
         return $invoice;
-    }
-
-    // 🔴 ДОБАВЛЯЕМ НОВЫЙ МЕТОД ДЛЯ ОТПРАВКИ УВЕДОМЛЕНИЙ О ЗАКАЗАХ
-    private function sendOrderNotification(Order $order)
-    {
-        try {
-            $products = $order->products ?? [];
-            $productList = '';
-            foreach ($products as $product) {
-                $name = $product['name'] ?? 'Товар';
-                $qty = $product['quantity'] ?? 1;
-                $price = number_format($product['price'] ?? 0, 0, '.', ' ');
-                $productList .= "▪️ {$name} — {$qty} шт. × {$price} ₸\n";
-            }
-
-            $total = number_format($order->getData("total") ?? 0, 0, '.', ' ');
-            $name = $order->name ?? 'Имя не указано';
-            $surname = $order->surname ?? 'Фамилия не указана';
-
-            $message = "🛒 *Новый заказ!*\n\n"
-                . "*Номер заказа:* `{$order->id}`\n"
-                . "*Сумма:* `{$total} ₸`\n"
-                . "*Адрес:* `{$order->getData("org_address")}`\n"
-                . "*Имя:* `{$name}`\n"
-                . "*Фамилия:* `{$surname}`\n"
-                . "*Email:* `{$order->email}`\n"
-                . "*Телефон:* `{$order->phone}`\n\n"
-                . "*Состав заказа:*\n"
-                . "{$productList}";
-
-            // Отправка в Telegram
-            $token = env('TG_BOT_TOKEN');
-            $channelId = '-1002352982230';
-            Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
-                'chat_id' => $channelId,
-                'text' => $message,
-                'parse_mode' => 'Markdown',
-            ]);
-
-            // Отправка на почту
-            \Illuminate\Support\Facades\Mail::raw($message, function ($mail) {
-                $mail->to('sale@kazbm.kz')
-                    ->subject('🛒 Новый заказ на сайте');
-            });
-
-            Log::info("Уведомление о новом заказе №{$order->id} отправлено");
-
-        } catch (\Exception $e) {
-            Log::error("Ошибка отправки уведомления о заказе: " . $e->getMessage());
-        }
     }
 }
