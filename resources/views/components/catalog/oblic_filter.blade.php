@@ -3,11 +3,11 @@
     <div class="close" onclick="closeFilter()">{{__("Отмена")}}</div>
     <div class="box">
         <div class="title">{{__("Категории")}}</div>
-        @if($categories && !$isOblicSection)
+        @if($oblicCategories && $isOblicSection)
             <div class="items">
-                @foreach($categories as $slug => $name)
+                @foreach($oblicCategories as $slug => $name)
                     <a class="item {{ isset($category) && $category->slug == $slug ? 'active' : '' }}"
-                    href="{{ city_route('category.city.show', ['slug' => $slug]) }}">{{ __($name) }}</a>
+                    href="{{ city_route('oblic.category.city.detail', ['city' => $currentCity->slug ?? '', 'slug' => $slug]) }}">{{ __($name) }}</a>
                 @endforeach
             </div>
         @endif

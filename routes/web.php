@@ -67,6 +67,8 @@ Route::prefix('ajax')
                 # get Filter data
                 #Route::post('/filter/products','products')->name('product.get');
                 Route::get('/filter/products','products')->name('product.get');
+                # get Filter data для облицовочного кирпича
+                Route::get('/filter/oblic-products','oblicProducts')->name('oblic.product.get');
                 # set Pagination
                 Route::post('/pagination/articles','articles')->name('article.pagination');
             });
@@ -169,6 +171,14 @@ Route::get('/oblicovochnyy-kirpich/our-products', function(){
     return app(SiteController::class)->getPage(request(), 'oblicovochnyy-kirpich/our-products');
 })->name('oblic.our-products.default');
 
+// Каталог для облицовочного кирпича
+Route::get('/oblicovochnyy-kirpich/catalog', function($city){
+    return app(SiteController::class)->getOblicCategory(request());
+})->name('oblic.category.city.show');
+
+// Категории для облицовочного кирпича
+Route::get('/oblicovochnyy-kirpich/catalog/{slug}', [SiteController::class, 'getOblicCategory'])->name('oblic.category.city.detail');
+
 // Главная страница без города
 Route::get('/', function () {
     $defaultCity = City::where('is_default', true)->first() ?? City::first();
@@ -207,6 +217,8 @@ Route::group(['prefix' => '{city}', 'middleware' => ['detect.city']], function (
     Route::get('/oblicovochnyy-kirpich/contacts', function($city){
         return app(SiteController::class)->getPage(request(), 'oblicovochnyy-kirpich/contacts');
     })->name('oblic.contacts.city');
+    Route::get('/oblicovochnyy-kirpich/catalog', [SiteController::class, 'getOblicCategory'])->name('oblic.category.city.show');
+    Route::get('/oblicovochnyy-kirpich/catalog/{slug}', [SiteController::class, 'getOblicCategory'])->name('oblic.category.city.detail');
 
     // Статические страницы
     Route::get('/about', fn($city) => app(SiteController::class)->getPage(request(), 'about'))->name('about.city');

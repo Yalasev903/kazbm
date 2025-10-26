@@ -146,6 +146,29 @@ class SiteController extends Controller
             view()->share($seo);
             return view("pages.$page->type", compact('page'), $mergeData);
         }
+
+            // Обработка страницы каталога облицовочного кирпича
+            if ($slug === 'oblicovochnyy-kirpich/catalog') {
+                $page = Page::where('slug', 'oblicovochnyy-kirpich/catalog')
+                            ->where('status', true)
+                            ->first();
+
+                if (!$page) {
+                    $page = new \stdClass();
+                    $page->type = 'oblic_catalog';
+                    $page->title = 'Каталог облицовочного кирпича';
+                    $page->slug = 'oblicovochnyy-kirpich/catalog';
+                    $page->seo_title = $page->title;
+                    $page->meta_keywords = '';
+                    $page->meta_description = '';
+                }
+
+                $seo = $this->buildSeoForPage($currentCity, 'page', $page);
+                $mergeData = $this->getParamsByPage($page, $request);
+
+                view()->share($seo);
+                return view("pages.$page->type", compact('page'), $mergeData);
+            }
         // Обработка страницы облицовочного кирпича
         // if ($slug === 'oblicovochnyy-kirpich') {
         //     $page = Page::where('slug', 'oblicovochnyy-kirpich')
@@ -365,6 +388,19 @@ private function getParamsByPage($page, $request)
             return [
                 'ourProductSettings' => app(\App\Filament\Settings\OurProductSettings::class),
             ];
+        case 'oblicovochnyy-kirpich/catalog':
+            $oblicCategory = Category::where('slug', 'oblicovochnyy-kirpich')->first();
+            $oblicCategories = [];
+            if ($oblicCategory) {
+                $oblicCategories = [$oblicCategory->slug => $oblicCategory->name];
+            }
+
+            $catalogData = $this->getOblicCatalogData($request);
+            return array_merge([
+                'oblicCategories' => $oblicCategories,
+                'colors' => ProductColor::query()->select(['id', 'image', 'name'])->get(),
+                'sizes' => \App\Models\ProductSize::all(), // Добавьте эту строку
+            ], $catalogData);
         case '/':
             // Данные для главной страницы (как было)
             return [
@@ -551,8 +587,80 @@ private function buildSeoForProduct($city, $product)
     ];
 }
 
+public function getOblicCategory(Request $request, $slug = null)
+{
+    $currentCity = app('currentCity');
 
+    \Log::debug('getOblicCategory called', [
+        'city' => $currentCity->slug,
+        'slug' => $slug,
+        'full_url' => $request->fullUrl()
+    ]);
 
+    // Находим категорию "Облицовочный кирпич"
+    $oblicCategory = Category::where('slug', 'oblicovochnyy-kirpich')
+                    ->where('status', true)
+                    ->first();
+
+    if (!$oblicCategory) {
+        abort(404, 'Категория облицовочного кирпича не найдена');
+    }
+
+    // Всегда используем корневую категорию
+    $category = $oblicCategory;
+
+    // Получаем данные
+    $colors = ProductColor::query()->select(['id', 'image', 'name'])->get();
+    $sizes = \App\Models\ProductSize::all(); // ДОБАВЬТЕ ЭТУ СТРОКУ
+    $mergeData = $this->getOblicCatalogData($request, $category->id);
+
+    $seo = $this->buildSeoForPage($currentCity, 'category', $category);
+    view()->share($seo);
+
+    $viewVars = [
+        'seoTitle' => $seo['seoTitle'] ?? $category->seo_title ?? $category->name ?? config('app.name'),
+        'seoDescription' => $seo['seoDescription'] ?? $category->meta_description ?? '',
+        'seoKeywords' => $seo['seoKeywords'] ?? $category->meta_keywords ?? '',
+        'h1' => $seo['h1'] ?? $category->title ?? $category->name ?? '',
+        'seo_title' => $seo['seoTitle'] ?? $category->seo_title ?? $category->name ?? config('app.name'),
+        'meta_description' => $seo['seoDescription'] ?? $category->meta_description ?? '',
+        'meta_keywords' => $seo['seoKeywords'] ?? $category->meta_keywords ?? '',
+        'page_title' => $seo['seoTitle'] ?? $category->seo_title ?? $category->name ?? config('app.name'),
+        'is_oblic_section' => true,
+    ];
+
+    // ДОБАВЬТЕ $sizes В compact()
+    return view('pages.catalog.oblic_category', array_merge(compact('category', 'colors', 'sizes'), $mergeData, $viewVars));
+}
+private function getOblicCatalogData(Request $request, ?int $categoryId = null): array
+{
+    // Находим ID категории облицовочного кирпича
+    $oblicCategory = Category::where('slug', 'oblicovochnyy-kirpich')->first();
+
+    if (!$oblicCategory) {
+        return ['maxPrice' => 0, 'products' => collect()];
+    }
+
+    // Используем только категорию облицовочного кирпича
+    $oblicCategoryIds = [$oblicCategory->id];
+
+    $productQuery = Product::query()
+        ->with(['pattern'])
+        ->select(['id', 'title', 'slug', 'size_id', 'price', 'color_id', 'category_id', 'pattern_id', 'stock', 'galleries'])
+        ->where('status', true)
+        ->whereIn('category_id', $oblicCategoryIds) // Только товары облицовочного кирпича
+        ->filter($request);
+
+    // Если указана конкретная категория, фильтруем по ней
+    if ($categoryId) {
+        $productQuery->where('category_id', $categoryId);
+    }
+
+    $maxPrice = (clone $productQuery)->max('price');
+    $products = $productQuery->paginate(12);
+
+    return compact('maxPrice', 'products');
+}
 
     /**
      * Простая подстановка плейсхолдеров:

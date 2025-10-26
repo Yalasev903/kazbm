@@ -21,27 +21,34 @@
                 </div>
             </div>
             <div class="menu">
-
-                @if($categories)
-                <div class="menu_link">
-                    <a class="menu_link" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">{{ __("Каталог") }}</a>
-                    <div class="dropdown">
-                        <div class="dropdown_inner">
-                            {{-- Ссылка на главную страницу облицовочного кирпича --}}
-                            <a class="dropdown_link" href="{{ city_route('oblic.city', ['city' => $currentCity->slug ?? '']) }}">
-                                {{ __("Облицовочный кирпич") }}
-                            </a>
-
-                            {{-- Обычные категории (без облицовочного кирпича) --}}
-                            @foreach($categories as $slug => $name)
-                                <a class="dropdown_link" href="{{ city_route('category.city.show', ['slug' => $slug]) }}">{{ $name }}</a>
-                            @endforeach
+                    @if($categories && !$isOblicSection)
+                    <div class="menu_link">
+                        <a class="menu_link" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">{{ __("Каталог") }}</a>
+                        <div class="dropdown">
+                            <div class="dropdown_inner">
+                                {{-- Обычные категории (без облицовочного кирпича) --}}
+                                @foreach($categories as $slug => $name)
+                                    <a class="dropdown_link" href="{{ city_route('category.city.show', ['slug' => $slug]) }}">{{ $name }}</a>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
-                </div>
-                @else
-                <a class="menu_link" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">{{ __("Каталог") }}</a>
-                @endif
+@elseif($isOblicSection)
+<div class="menu_link">
+    <a class="menu_link" href="{{ city_route('oblic.category.city.show', ['city' => $currentCity->slug ?? '']) }}">{{ __("Каталог") }}</a>
+    <div class="dropdown">
+        <div class="dropdown_inner">
+            {{-- Показываем ВСЕ категории облицовочного кирпича --}}
+            @foreach($oblicCategories as $slug => $name)
+                <a class="dropdown_link" href="{{ city_route('oblic.category.city.detail', ['city' => $currentCity->slug ?? '', 'slug' => $slug]) }}">{{ $name }}</a>
+            @endforeach
+        </div>
+    </div>
+</div>
+
+                    @else
+                    <a class="menu_link" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">{{ __("Каталог") }}</a>
+                    @endif
                 <a class="menu_link" href="{{ city_route( 'calculator.city') }}">{{__("Калькулятор")}}</a>
                {{-- Ссылка "О компании" в зависимости от раздела --}}
                 @if($isOblicSection)
@@ -51,9 +58,9 @@
                 @endif
                 <a class="menu_link" href="{{ city_route('pages.city.get', ['slug' => 'articles']) }}">{{__("Статьи")}}</a>
                 @if(request()->is('*oblicovochnyy-kirpich*'))
-                    <a href="{{ oblic_contacts_route() }}">Контакты</a>
+                    <a class="menu_link" href="{{ city_route('oblic.contacts.city') }}">Контакты</a>
                 @else
-                    <a href="{{ city_route('contacts.city') }}">Контакты</a>
+                    <a class="menu_link" href="{{ city_route('contacts.city') }}">Контакты</a>
                 @endif
             </div>
         </div>
@@ -222,19 +229,19 @@
         <a class="tel" href="tel:+{{ $generalSettings->getPhone() }}">{{ $generalSettings->phone }}</a>
     </div>
 </div>
-@if($categories)
-<div class="mobileCatalog">
-    {{-- Ссылка на главную страницу облицовочного кирпича --}}
-    <a class="link" href="{{ city_route('oblic.city', ['city' => $currentCity->slug ?? '']) }}">
-        {{ __("Облицовочный кирпич") }}
-    </a>
-
-    {{-- Обычные категории (без облицовочного кирпича) --}}
-    @foreach($categories as $slug => $name)
-        <a class="link" href="{{ city_route('category.city.show', ['slug' => $slug]) }}">{{$name}}</a>
-    @endforeach
-</div>
-@endif
+    @if($categories && !$isOblicSection)
+    <div class="mobileCatalog">
+        @foreach($categories as $slug => $name)
+            <a class="link" href="{{ city_route('category.city.show', ['slug' => $slug]) }}">{{$name}}</a>
+        @endforeach
+    </div>
+    @elseif($oblicCategories && $isOblicSection)
+    <div class="mobileCatalog">
+        @foreach($oblicCategories as $slug => $name)
+            <a class="link" href="{{ city_route('oblic.category.city.detail', ['city' => $currentCity->slug ?? '', 'slug' => $slug]) }}">{{$name}}</a>
+        @endforeach
+    </div>
+    @endif
 <div class="mobileInteractive">
     <div class="icon">
         <div class="link" onclick="closeOnlyMenuOpenCatalog()">

@@ -100,5 +100,23 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('canonicalBase', $canonicalBase);
         });
+        View::composer('*', function ($view) {
+            $currentCity = app('currentCity');
+            $isOblicSection = request()->is('*oblicovochnyy-kirpich*');
+
+            // Основные категории (гиперпрессованный кирпич) - все кроме облицовочного
+            $categories = Category::where('status', true)
+                ->where('slug', '!=', 'oblicovochnyy-kirpich')
+                ->pluck('name', 'slug')
+                ->toArray();
+
+            // Категории облицовочного кирпича - только облицовочный кирпич
+            $oblicCategories = Category::where('status', true)
+                ->where('slug', 'oblicovochnyy-kirpich')
+                ->pluck('name', 'slug')
+                ->toArray();
+
+            $view->with(compact('isOblicSection', 'categories', 'oblicCategories'));
+        });
     }
 }

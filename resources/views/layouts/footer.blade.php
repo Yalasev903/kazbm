@@ -1,4 +1,7 @@
-@php use Illuminate\Support\Facades\App; @endphp
+@php use Illuminate\Support\Facades\App;
+         $currentCity = app('currentCity');
+         $isOblicSection = request()->is('*oblicovochnyy-kirpich*');
+        @endphp
 <footer class="footer">
     <div class="footer_inner">
         <div class="footer_top">
@@ -43,11 +46,41 @@
                         @endif
                     </div>
                     <div class="menu_right">
-                        <a class="link" href="{{ city_route('about.city') }}">{{__("О компании")}}</a>
-                        <a class="link" href="{{ city_route('calculator.city') }}">{{__("Калькулятор")}}</a>
+                    {{-- Ссылка "О компании" в зависимости от раздела --}}
+                    @if($isOblicSection)
+                        <a class="menu_link link" href="{{ city_route('oblic.about.city', ['city' => $currentCity->slug ?? '']) }}">{{__("О компании")}}</a>
+                    @else
+                        <a class="menu_link link" href="{{ city_route('about.city') }}">{{__("О компании")}}</a>
+                    @endif
+
+                    {{-- Ссылка "Каталог" в зависимости от раздела --}}
+                    @if($isOblicSection)
+                        <a class="link" href="{{ city_route('pages.city.get', ['slug' => 'oblicovochnyy-kirpich/catalog']) }}">{{__("Каталог")}}</a>
+                    @else
                         <a class="link" href="{{ city_route('pages.city.get', ['slug' => 'catalog']) }}">{{__("Каталог")}}</a>
-                        <a class="link" href="{{ city_route('pages.city.get', ['slug' => 'articles']) }}">{{__("Статьи")}}</a>
-                        <a class="link" href="{{ city_route('contacts.city') }}">{{__("Контакты")}}</a>
+                    @endif
+
+                    <a class="link" href="{{ city_route('calculator.city') }}">{{__("Калькулятор")}}</a>
+                    <a class="link" href="{{ city_route('pages.city.get', ['slug' => 'articles']) }}">{{__("Статьи")}}</a>
+
+                    {{-- Ссылка "Контакты" в зависимости от раздела --}}
+                    @if($isOblicSection)
+                        <a class="menu_link link" href="{{ city_route('oblic.contacts.city', ['city' => $currentCity->slug ?? '']) }}">{{__("Контакты")}}</a>
+                    @else
+                        <a class="menu_link link" href="{{ city_route('contacts.city') }}">{{__("Контакты")}}</a>
+                    @endif
+
+                    {{-- Ссылка на облицовочный кирпич показываем только в основном разделе --}}
+                    @if($isOblicSection)
+                            <a class="dropdown_link link" href="{{ city_route('home.city') }}">
+                                {{ __("Главная страница") }}
+                            </a>
+                        @else
+                            {{-- Ссылка на облицовочный кирпич показываем только в основном разделе --}}
+                            <a class="dropdown_link link" href="{{ city_route('oblic.city', ['city' => $currentCity->slug ?? '']) }}">
+                                {{ __("Облицовочный кирпич") }}
+                            </a>
+                        @endif
                     </div>
                 </div>
 
