@@ -5,6 +5,10 @@ if (! function_exists('city_route')) {
     {
         $city = app('currentCity') ?? null;
 
+        // Если это Filament/админка, используем обычный route()
+        if (request()->is('filament*') || request()->is('admin*')) {
+            return route($name, $params);
+        }
         // Для главной страницы
         if ($name === 'home.city') {
             if ($city && $city->is_default) {

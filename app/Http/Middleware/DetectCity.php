@@ -10,6 +10,21 @@ class DetectCity
 {
     public function handle(Request $request, Closure $next)
     {
+
+         if ($request->is('admin*') ||
+            $request->is('filament*') ||
+            $request->is('_debugbar*') ||
+            $request->is('livewire*') ||
+            (class_exists(\Filament\Facades\Filament::class) && \Filament\Facades\Filament::isServing()) ||
+            str_contains($request->url(), '/filament/') ||
+            str_contains($request->url(), '/admin/')) {
+
+            // 🔴 ВАЖНО: Устанавливаем заглушку для currentCity даже для админки
+            $defaultCity = City::where('is_default', true)->first() ?? City::first();
+            app()->instance('currentCity', $defaultCity);
+
+            return $next($request);
+        }
         // 🔴 ДОБАВЬТЕ ЭТУ ПРОВЕРКУ В САМОЕ НАЧАЛО
         if ($request->is('ajax/*') || $request->is('api/*')) {
             $city = City::where('is_default', true)->first() ?? City::first();

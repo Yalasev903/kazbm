@@ -49,6 +49,8 @@ class AppServiceProvider extends ServiceProvider
 
         View::share('generalSettings', $generalSettings);
 
+        View::share('canonicalBase', config('app.url'));
+
         View::composer(['layouts.header'], function ($view) {
             $view->with('cartCount', (new Basket)->getContent()->count());
         });
@@ -77,17 +79,17 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Автоматически пинговать при изменении контента
-        $models = [\App\Models\City::class, \App\Models\Page::class, \App\Models\Category::class, \App\Models\Article::class];
+        // $models = [\App\Models\City::class, \App\Models\Page::class, \App\Models\Category::class, \App\Models\Article::class];
 
-        foreach ($models as $model) {
-            $model::saved(function () {
-                \Artisan::call('sitemap:generate');
-            });
+        // foreach ($models as $model) {
+        //     $model::saved(function () {
+        //         \Artisan::call('sitemap:generate');
+        //     });
 
-            $model::deleted(function () {
-                \Artisan::call('sitemap:generate');
-            });
-        }
+        //     $model::deleted(function () {
+        //         \Artisan::call('sitemap:generate');
+        //     });
+        // }
 
         View::composer('*', function ($view) {
             $defaultCity = City::where('is_default', true)->first();
@@ -101,22 +103,27 @@ class AppServiceProvider extends ServiceProvider
             $view->with('canonicalBase', $canonicalBase);
         });
         View::composer('*', function ($view) {
-            $currentCity = app('currentCity');
-            $isOblicSection = request()->is('*oblicovochnyy-kirpich*');
+        // Не выполняем для админских путей
+        if (request()->is('admin*') ||
+            request()->is('filament*') ||
+            (class_exists(\Filament\Facades\Filament::class) && \Filament\Facades\Filament::isServing())) {
+            return;
+        }
 
-            // Основные категории (гиперпрессованный кирпич) - все кроме облицовочного
-            $categories = Category::where('status', true)
-                ->where('slug', '!=', 'oblicovochnyy-kirpich')
-                ->pluck('name', 'slug')
-                ->toArray();
+        $currentCity = app('currentCity');
+        $isOblicSection = request()->is('*oblicovochnyy-kirpich*');
 
-            // Категории облицовочного кирпича - только облицовочный кирпич
-            $oblicCategories = Category::where('status', true)
-                ->where('slug', 'oblicovochnyy-kirpich')
-                ->pluck('name', 'slug')
-                ->toArray();
+        $categories = Category::where('status', true)
+            ->where('slug', '!=', 'oblicovochnyy-kirpich')
+            ->pluck('name', 'slug')
+            ->toArray();
 
-            $view->with(compact('isOblicSection', 'categories', 'oblicCategories'));
-        });
-    }
+        $oblicCategories = Category::where('status', true)
+            ->where('slug', 'oblicovochnyy-kirpich')
+            ->pluck('name', 'slug')
+            ->toArray();
+
+        $view->with(compact('isOblicSection', 'categories', 'oblicCategories'));
+    });
+  }
 }
