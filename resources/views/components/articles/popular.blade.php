@@ -20,13 +20,12 @@
         <div class="right">
             @foreach($articles as $article)
                 <div class="item">
-                    <picture>
-                        @if($photo = $article->getWebpFormat('small_image'))
-                            <source srcset="{{$photo}}" type="image/webp">
-                            <source srcset="{{$photo}}" type="image/pjp2">
-                        @endif
-                        <img src="{{ $article->getRealFormat('small_image') }}" alt="{{ $article->title }}" loading="lazy">
-                    </picture>
+                    <x-webp-image
+                        src="{{ $article->getRealFormat('small_image') }}"
+                        alt="{{ $article->title }}"
+                        class="item_left"
+                        :lazy="true"
+                    />
                     <div class="item_right">
                         <div class="item_title">{{ $article->title }}</div>
                         <div class="item_date">{{ $article->getPublishedAt() }}</div>

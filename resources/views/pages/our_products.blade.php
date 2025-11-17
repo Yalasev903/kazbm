@@ -22,26 +22,23 @@
             {{-- <div class="titles">{{ $page->sub_title ?: $page->title }}</div> --}}
             <div class="titles">{{ $mainTitle }}</div>
             @php $ourProductSettings = app(\App\Filament\Settings\OurProductSettings::class) @endphp
-            <picture class="banner">
-                @if($heroPhoto = $ourProductSettings->getWebpFormat('hero_image'))
-                    <source srcset="{{$heroPhoto}}" type="image/webp">
-                    <source srcset="{{$heroPhoto}}" type="image/pjp2">
-                @endif
-                <img src="{{ $ourProductSettings->getRealFormat('hero_image') }}" alt="hero image">
-            </picture>
+                <x-webp-image
+                    src="{{ $ourProductSettings->getRealFormat('hero_image') }}"
+                    class="banner"
+                    alt="hero image"
+                    :lazy="true"
+                />
             <div class="banner_title">{{ $ourProductSettings->hero_desc }}</div>
             <div class="block2">
                 <div class="title">{{ $ourProductSettings->feature_title }}</div>
                 <div class="block2_box">
                     <div class="left">{!! $ourProductSettings->feature_desc !!}</div>
                     <div class="right">
-                        <picture>
-                            @if($featurePhoto = $ourProductSettings->getWebpFormat('feature_photo'))
-                                <source srcset="{{$featurePhoto}}" type="image/webp">
-                                <source srcset="{{$featurePhoto}}" type="image/pjp2">
-                            @endif
-                            <img src="{{ $ourProductSettings->getRealFormat('feature_photo') }}" alt="feature image">
-                        </picture>
+                 <x-webp-image
+                    src="{{ $ourProductSettings->getRealFormat('feature_photo') }}"
+                    alt="feature image"
+                    :lazy="true"
+                />
                     </div>
                 </div>
                 <div class="desc">

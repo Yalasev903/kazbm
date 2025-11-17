@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Intervention\Image\Facades\Image;
 use League\Flysystem\UnableToCheckFileExistence;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use App\Services\ImageOptimizationService;
 
 class FileUpload extends \Filament\Forms\Components\FileUpload
 {
@@ -132,27 +133,32 @@ class FileUpload extends \Filament\Forms\Components\FileUpload
 
             if (in_array('image/*', $component->getAcceptedFileTypes())
                 && !in_array($file->getClientOriginalExtension(), ['svg', 'webp'])) {
+
                 $fileName = $component->getUploadedFileNameForStorage($file);
                 $fileDirectory = storage_path('app/public/'). $component->getDirectory();
+
                 if (!file_exists($fileDirectory)) {
-                    mkdir($fileDirectory);
+                    mkdir($fileDirectory, 0755, true);
                 }
-                Image::make($file->path())
-                    ->encode('webp')
-                    ->save($fileDirectory .'/'. pathinfo($fileName, PATHINFO_FILENAME) .'.webp');
+
+                // Сохраняем оригинал
+                $storeMethod = $component->getVisibility() === 'public' ? 'storePubliclyAs' : 'storeAs';
+                $storedPath = $file->{$storeMethod}(
+                    $component->getDirectory(),
+                    $fileName,
+                    $component->getDiskName(),
+                );
+
+                // Создаем WebP версию
+                $originalFullPath = storage_path('app/public/') . $storedPath;
+
+                $service = app(ImageOptimizationService::class);
+                $service->convertToWebP($originalFullPath);
+
+                return $storedPath;
             }
 
-            if (
-                $component->shouldMoveFiles() &&
-                ($component->getDiskName() == (fn (): string => $this->disk)->call($file))
-            ) {
-                $newPath = trim($component->getDirectory() . '/' . $component->getUploadedFileNameForStorage($file), '/');
-
-                $component->getDisk()->move((fn (): string => $this->path)->call($file), $newPath);
-
-                return $newPath;
-            }
-
+            // Для не-изображений или уже WebP файлов
             $storeMethod = $component->getVisibility() === 'public' ? 'storePubliclyAs' : 'storeAs';
 
             return $file->{$storeMethod}(

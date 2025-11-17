@@ -11,19 +11,20 @@
                     <img src="{{ $pattern->getRealFormat('photo') }}" alt="{{ $pattern->name }}" loading="lazy">
                 </picture>
             @endif
+            {{-- Вместо текущего кода слайдера --}}
             <div class="card_slider">
                 @foreach($product->galleries as $k => $img)
                     <div class="slider-item">
-                        <a href="{{ \App\Helpers\Common::getImage($img) }}" data-fancybox="gallery-{{ $product->id }}" data-caption="{{ $product->title }} - изображение {{ $k + 1 }}">
-                            <picture>
-                                @if($photo = \App\Helpers\Common::getWebpByImage($img))
-                                    <source data-lazy="{{ \App\Helpers\Common::getImage($photo) }}" type="image/webp">
-                                    <source data-lazy="{{ \App\Helpers\Common::getImage($photo) }}" type="image/pjp2">
-                                @endif
-                                <img data-lazy="{{ \App\Helpers\Common::getImage($img) }}" alt="slider image{{$k}}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect width='100%25' height='100%25' fill='%23f0f0f0'/%3E%3C/svg%3E">
-                            </picture>
+                        <a href="{{ \App\Helpers\Common::getImage($img) }}" data-fancybox="gallery-{{ $product->id }}">
+                            <x-webp-image
+                                src="{{ \App\Helpers\Common::getImage($img) }}"
+                                alt="{{ $product->title }} - изображение {{ $k + 1 }}"
+                                :lazy="true"
+                                :width="300"
+                                :height="300"
+                                class="slider-image"
+                            />
                         </a>
-                        <a href="{{ city_route('product.city.show', ['category' => $product->category->slug, 'slug' => $product->slug]) }}" class="product-link" style="position: absolute; bottom: 0; left: 0; right: 0; height: 30%; z-index: 2; background: transparent;"></a>
                     </div>
                 @endforeach
             </div>

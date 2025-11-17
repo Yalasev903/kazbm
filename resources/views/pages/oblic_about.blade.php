@@ -27,13 +27,12 @@
             <div class="min-container">
                 @if($bannerSettings->sub_title)
                     <div class="block2">
-                        <picture class="left">
-                            @if($photo = $bannerSettings->getWebpFormat('photo'))
-                                <source srcset="{{$photo}}" type="image/webp">
-                                <source srcset="{{$photo}}" type="image/pjp2">
-                            @endif
-                            <img src="{{ $bannerSettings->getRealFormat('photo') }}" alt="{{ $bannerSettings->{'desc_' . App::getLocale()} }}">
-                        </picture>
+                        <x-webp-image
+                            src="{{ $bannerSettings->getRealFormat('photo') }}"
+                            alt="{{ $bannerSettings->{'desc_' . App::getLocale()} }}"
+                            class="left"
+                            :lazy="true"
+                        />
                         <div class="right">
                             <div class="titles">{{ $bannerSettings->sub_title }}</div>
                             <div class="desc">{{ $bannerSettings->{'desc_' . App::getLocale()} }}</div>
@@ -43,13 +42,12 @@
 
                 @if($productSettings->title)
                     <div class="block4">
-                        <picture class="left">
-                            @if($photo = $productSettings->getWebpFormat('photo'))
-                                <source srcset="{{$photo}}" type="image/webp">
-                                <source srcset="{{$photo}}" type="image/pjp2">
-                            @endif
-                            <img src="{{ $productSettings->getRealFormat('photo') }}" alt="{{ $productSettings->title }}" loading="lazy">
-                        </picture>
+                        <x-webp-image
+                            src="{{ $productSettings->getRealFormat('photo') }}"
+                            alt="{{ $productSettings->title }}"
+                            class="left"
+                            :lazy="true"
+                        />
                         <div class="right">
                             <div class="title">{{__("Наша Продукция")}}</div>
                             <div class="desc">{{__("Облицовочный кирпич от ТОО “KAZBM” — это высококачественный, долговечный и эстетически привлекательный строительный материал, идеально подходящий для современного строительства.") }}</div>
@@ -73,13 +71,12 @@
                             </div>
                         @endforeach
                     </div>
-                    <picture class="right">
-                        @if($photo = $productSettings->getWebpFormat('item_photo'))
-                            <source srcset="{{ $photo }}" type="image/webp">
-                            <source srcset="{{ $photo }}" type="image/pjp2">
-                        @endif
-                        <img src="{{ $productSettings->getRealFormat('item_photo') }}" alt="item photo" loading="lazy">
-                    </picture>
+                    <x-webp-image
+                        src="{{ $productSettings->getRealFormat('item_photo') }}"
+                        class="right"
+                        alt="item photo"
+                        :lazy="true"
+                    />
                 </div>
             @endif
             </div>

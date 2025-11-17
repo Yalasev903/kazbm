@@ -24,13 +24,12 @@
 
             <div class="titles">{{ $h1 ?? $page->title  }}</div>
 
-            <picture class="banner">
-                @if($heroPhoto = $oblicOurProductSettings->getWebpFormat('hero_image'))
-                    <source srcset="{{$heroPhoto}}" type="image/webp">
-                    <source srcset="{{$heroPhoto}}" type="image/pjp2">
-                @endif
-                <img src="{{ $oblicOurProductSettings->getRealFormat('hero_image') }}" alt="hero image">
-            </picture>
+            <x-webp-image
+                src="{{ $oblicOurProductSettings->getRealFormat('hero_image') }}"
+                alt="hero image"
+                class="banner"
+                :lazy="true"
+            />
             <div class="banner_title">{{ $oblicOurProductSettings->hero_desc }}</div>
 
             <div class="block2">
@@ -38,13 +37,11 @@
                 <div class="block2_box">
                     <div class="left">{!! $oblicOurProductSettings->feature_desc !!}</div>
                     <div class="right">
-                        <picture>
-                            @if($featurePhoto = $oblicOurProductSettings->getWebpFormat('feature_photo'))
-                                <source srcset="{{$featurePhoto}}" type="image/webp">
-                                <source srcset="{{$featurePhoto}}" type="image/pjp2">
-                            @endif
-                            <img src="{{ $oblicOurProductSettings->getRealFormat('feature_photo') }}" alt="feature image">
-                        </picture>
+                        <x-webp-image
+                            src="{{ $oblicOurProductSettings->getRealFormat('feature_photo') }}"
+                            alt="feature image"
+                            :lazy="true"
+                        />
                     </div>
                 </div>
                 <div class="desc">

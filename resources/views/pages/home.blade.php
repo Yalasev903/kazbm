@@ -16,11 +16,14 @@
                 @php $productSettings = app(\App\Filament\Settings\About\ProductSettings::class) @endphp
                 @if($productSettings->title)
                     <div class="block5_row1">
-                        <picture>
-                            <source srcset="{{ asset('images/hpb5_1.webp') }}" type="image/webp">
-                            <source srcset="{{ asset('images/hpb5_1.webp') }}" type="image/pjp2">
-                            <img src="{{ asset('images/hpb5_1.png') }}" alt="hpb5_1 image" loading="lazy">
-                        </picture>
+                            <x-webp-image
+                                src="images/hpb5_1.png"
+                                alt="hpb5_1 image"
+                                class="optimized-image"
+                                :width="542"
+                                :height="368"
+                                :lazy="true"
+                            />
                         <div class="right">
                             <div class="titles">{{__("О компании kazbm")}}</div>
                             <div class="subTitle">{{ __("Наша Продукция")}}</div>
@@ -28,11 +31,12 @@
                         </div>
                     </div>
                 @endif
-                <picture class="full">
-                    <source srcset="{{ asset('images/hpb5_2.webp') }}" type="image/webp">
-                    <source srcset="{{ asset('images/hpb5_2.webp') }}" type="image/pjp2">
-                    <img src="{{ asset('images/hpb5_2.png') }}" alt="hpb5_2 image" loading="lazy">
-                </picture>
+                <x-webp-image
+                    src="images/hpb5_2.png"
+                    alt="hpb5_2 image"
+                    class="full optimized-image"
+                    :lazy="true"
+                />
                 <div class="block5_row2">
                     <div class="left">
                         @php $advantageSettings = app(\App\Filament\Settings\About\AdvantageSettings::class) @endphp
@@ -56,11 +60,14 @@
                         </div>
                     </div>
                     <div class="right">
-                        <picture>
-                            <source srcset="{{ asset('images/hpb5_3.webp') }}" type="image/webp">
-                            <source srcset="{{ asset('images/hpb5_3.webp') }}" type="image/pjp2">
-                            <img src="{{ asset('images/hpb5_3.png') }}" alt="hpb5_3 image" loading="lazy">
-                        </picture>
+                        <x-webp-image
+                            src="images/hpb5_3.png"
+                            alt="hpb5_3 image"
+                            class="optimized-image"
+                            :width="736"
+                            :height="173"
+                            :lazy="true"
+                        />
                         <a class="btn" href="{{ route('pages.city.get', [
                             'city' => app()->get('currentCity')->slug ?? session('current_city_slug'),
                             'slug' => 'about'

@@ -17,13 +17,13 @@
                     <image id="image0_279_21675" width="1000" height="500" xlink:href="{{ $oblicHeroSettings->getRealFormat('photo') }}"></image>
                 </defs>
             </svg>
-            <picture class="img">
-                @if($photo = $oblicHeroSettings->getWebpFormat('photo'))
-                    <source srcset="{{$photo}}" type="image/webp">
-                    <source srcset="{{$photo}}" type="image/pjp2">
-                @endif
-                <img src="{{ $oblicHeroSettings->getRealFormat('photo') }}" alt="hero image" loading="lazy">
-            </picture>
+            <x-webp-image
+                src="{{ $oblicHeroSettings->getRealFormat('photo') }}"
+                alt="hero image"
+                class="hero-main-image"
+                :lazy="false"
+                fetchpriority="high"
+            />
         </div>
     </div>
 @endif

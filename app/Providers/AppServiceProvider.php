@@ -13,6 +13,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use App\Models\City;
+use Illuminate\Support\Facades\Blade;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,38 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(GeneralSettings $generalSettings): void
     {
+        if (!function_exists('getWebpPath')) {
+            function getWebpPath($originalPath) {
+                // Если путь уже абсолютный URL
+                if (str_starts_with($originalPath, 'http')) {
+                    return $originalPath;
+                }
+
+                // Определяем базовый путь в зависимости от источника
+                if (str_starts_with($originalPath, '/storage/')) {
+                    // Для storage путей
+                    $relativePath = str_replace('/storage/', '', $originalPath);
+                    $storagePath = storage_path('app/public/' . $relativePath);
+                    $webpPath = dirname($storagePath) . '/' . pathinfo($storagePath, PATHINFO_FILENAME) . '.webp';
+
+                    // Проверяем существование WebP в storage
+                    if (file_exists($webpPath)) {
+                        return '/storage/' . dirname($relativePath) . '/' . pathinfo($relativePath, PATHINFO_FILENAME) . '.webp';
+                    }
+                } else {
+                    // Для public путей
+                    $publicPath = public_path($originalPath);
+                    $webpPath = dirname($publicPath) . '/' . pathinfo($publicPath, PATHINFO_FILENAME) . '.webp';
+
+                    if (file_exists($webpPath)) {
+                        return dirname($originalPath) . '/' . pathinfo($originalPath, PATHINFO_FILENAME) . '.webp';
+                    }
+                }
+
+                return $originalPath; // Fallback на оригинал если WebP нет
+            }
+        }
+
         Paginator::useBootstrap();
         Paginator::defaultView('components.pagination');
 

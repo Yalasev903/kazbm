@@ -1,14 +1,7 @@
 @php(\Log::debug('category view vars', ['seoTitle' => $seoTitle ?? null, 'seo_title' => $seo_title ?? null]))
 @extends('layouts.app')
 
-{{-- @section('page_title', $page_title)
-@section('seo_title', $seo_title)
-@section('meta_description', $meta_description)
-@section('meta_keywords', $meta_keywords) --}}
-
 @section('content')
-    <main class="catalogPage">
-        <div class="container">
     <main class="catalogPage">
         <div class="container">
             @include('.components.breadcrumbs', [
@@ -16,16 +9,28 @@
                 'parents' => ['Каталог' => city_route('pages.city.get', ['slug' => 'catalog'])]
             ])
             <div class="banner">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1380" height="339" viewBox="0 0 1380 339" fill="none">
+                <!-- Оптимизированный SVG с предзагрузкой изображения -->
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1380" height="339" viewBox="0 0 1380 339" fill="none" aria-hidden="true">
                     <path d="M0 20C0 8.95431 8.95431 0 20 0H1360C1371.05 0 1380 8.95431 1380 20V319C1380 330.046 1371.05 339 1360 339H477.5C466.454 339 457.5 330.046 457.5 319V251.5C457.5 240.454 448.546 231.5 437.5 231.5H20C8.9543 231.5 0 222.546 0 211.5V20Z" fill="url(#pattern0_279_22100)"></path>
                     <defs>
                         <pattern id="pattern0_279_22100" patternContentUnits="objectBoundingBox" width="1" height="1">
                             <use xlink:href="#image0_279_22100" transform="matrix(0.000555556 0 0 0.00226155 0 -1.24244)"></use>
                         </pattern>
-                        <image id="image0_279_22100" width="1800" height="1201" xlink:href="{{ asset('images/catalog.png') }}"></image>
+                        <!-- WebP с fallback -->
+                        <image id="image0_279_22100" width="1800" height="1201" xlink:href="{{ asset('images/catalog.png') }}">
+                            <source srcset="{{ asset('images/catalog.webp') }}" type="image/webp">
+                        </image>
                     </defs>
                 </svg>
-                <img class="mobileBanner" src="{{ asset('images/catalog.png') }}" alt="catalog banner">
+                <!-- Оптимизированное мобильное изображение -->
+                <x-webp-image
+                    src="images/catalog.png"
+                    alt="catalog banner"
+                    class="mobileBanner"
+                    :lazy="true"
+                    :width="352"
+                    :height="235"
+                />
                 <div class="title"><b>{{__("Каталог")}}</b></div>
             </div>
             <div class="block2">
@@ -35,7 +40,7 @@
                     <div class="head_box">
                         <div class="head"></div>
                         <div class="head_icon" onclick="openFilter()">
-                            <svg width="22" height="20" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <svg width="22" height="20" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                 <path d="M21 1H1L9 9.96484V16.1625L13 18.0578V9.96484L21 1Z" stroke="#3B3535" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                             </svg>
                         </div>
@@ -51,6 +56,128 @@
         </div>
     </main>
 @endsection
+
+{{-- @section('scripts')
+<script type="text/javascript" defer>
+// Улучшенная инициализация с предотвращением forced reflow
+function initCatalogScripts() {
+    localStorage.setItem('productQueryString', '');
+
+    // Оптимизированная инициализация слайдера
+    function initProductSliders() {
+        const $sliders = $('.card .card_slider');
+
+        // Используем requestAnimationFrame для предотвращения forced reflow
+        requestAnimationFrame(() => {
+            $sliders.slick({
+                slidesToShow: 1,
+                slidesToScroll: 1,
+                dots: true,
+                arrows: false,
+                infinite: false,
+                focusOnSelect: false,
+                variableWidth: false,
+                lazyLoad: 'ondemand',
+                waitForAnimate: false, // Добавляем для оптимизации
+                responsive: [
+                    {
+                        breakpoint: 576,
+                        settings: {
+                            arrows: false,
+                            waitForAnimate: false
+                        },
+                    },
+                ],
+            }).on('init afterChange', function(event, slick) {
+                // Оптимизированная ленивая загрузка
+                const $slider = $(this);
+                const $activeSlide = $slider.find('.slick-active');
+
+                // Загружаем только активное изображение сразу
+                $activeSlide.find('img[data-lazy]').each(function() {
+                    const $img = $(this);
+                    const src = $img.attr('data-lazy');
+                    if (src && !$img.attr('src').includes('data:image')) {
+                        // Используем Image для предзагрузки
+                        const preloadImage = new Image();
+                        preloadImage.src = src;
+                        preloadImage.onload = function() {
+                            $img.attr('src', src).removeAttr('data-lazy');
+                        };
+                    }
+                });
+            });
+        });
+    }
+
+    // Отложенная инициализация слайдеров
+    function initSlidersWhenIdle() {
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => {
+                initProductSliders();
+            }, { timeout: 2000 });
+        } else {
+            // Fallback для старых браузеров
+            setTimeout(initProductSliders, 1000);
+        }
+    }
+
+    // Остальной код остается таким же...
+    $(".clearFilterBtn").on('click', function (e) {
+        e.preventDefault();
+        ajaxRequest();
+    });
+
+    // Оптимизированная инициализация слайдера цены
+    function initPriceSlider() {
+        const $slider = $("#slider-range");
+        if ($slider.length) {
+            requestAnimationFrame(() => {
+                $slider.slider({
+                    range: true,
+                    min: parseInt($slider.data('min')),
+                    max: parseInt($slider.data('max')),
+                    values: [parseInt($(".minVal").val()), parseInt($(".maxVal").val())],
+                    slide: function(event, ui) {
+                        $(".minVal").val(ui.values[0]);
+                        $(".maxVal").val(ui.values[1]);
+                        // Дебаунс для предотвращения частых запросов
+                        clearTimeout(window.priceUpdateTimeout);
+                        window.priceUpdateTimeout = setTimeout(() => {
+                            updatePrice(ui.values[0], ui.values[1]);
+                        }, 300);
+                    }
+                });
+            });
+        }
+    }
+
+    // Инициализируем слайдер цены после загрузки DOM
+    initPriceSlider();
+
+    // Остальные обработчики...
+    $(".minVal, .maxVal").on('input', function (e) {
+        $("#slider-range").slider("values", 0, $(".minVal").val());
+        $("#slider-range").slider("values", 1, $(".maxVal").val());
+
+        clearTimeout(window.priceUpdateTimeout);
+        window.priceUpdateTimeout = setTimeout(() => {
+            updatePrice($(".minVal").val(), $(".maxVal").val());
+        }, 300);
+    });
+
+    // Инициализация слайдеров товаров после небольшой задержки
+    setTimeout(initSlidersWhenIdle, 500);
+}
+
+// Запускаем когда DOM готов
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCatalogScripts);
+} else {
+    setTimeout(initCatalogScripts, 100);
+}
+</script>
+@endsection --}}
 @section('scripts')
     <script type="text/javascript">
         $(function () {

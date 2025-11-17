@@ -6,15 +6,20 @@
                 @foreach($items as $i => $item)
                     <div class="item {{ $i == 0 ? 'active' : '' }}">
                         @php $image = \App\Helpers\Common::getImage($item['image']) @endphp
-                        <img src="{{ $image }}" alt="advantage image{{$i}}" loading="lazy">
+                        <x-webp-image
+                            src="{{ $image }}"
+                            alt="advantage image{{$i}}"
+                            :lazy="true"
+                        />
                     </div>
                 @endforeach
             </div>
-            <picture class="bgi">
-                <source srcset="{{ asset('images/hpb4.webp') }}" type="image/webp">
-                <source srcset="{{ asset('images/hpb4.webp') }}" type="image/pjp2">
-                <img src="{{ asset('images/hpb4.png') }}" alt="" loading="lazy">
-            </picture>
+            <x-webp-image
+                src="{{ asset('images/hpb4.png') }}"
+                alt=""
+                class="bgi"
+                :lazy="true"
+            />
         </div>
         <div class="right">
             <div class="head">
@@ -50,7 +55,12 @@
                 @foreach($items as $i => $item)
                     <div class="item">
                         @php $small_image = \App\Helpers\Common::getImage($item['small_image']) @endphp
-                        <img class="item_icon" src="{{$small_image}}" alt="item icon{{$i}}">
+                        <x-webp-image
+                            src="{{$small_image}}"
+                            alt="item icon{{$i}}"
+                            class="item_icon"
+                            :lazy="true"
+                        />
                         <div class="item_text">{{ $item['title'] }}</div>
                     </div>
                 @endforeach

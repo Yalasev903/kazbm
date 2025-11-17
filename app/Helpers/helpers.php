@@ -101,3 +101,51 @@ if (! function_exists('oblic_our_products_route')) {
         return url('/' . $city->slug . '/oblicovochnyy-kirpich/our-products');
     }
 }
+
+if (! function_exists('webp_image')) {
+    function webp_image($originalPath, $alt = '', $class = '', $attributes = [], $lazy = true)
+    {
+        // Если путь уже абсолютный URL
+        if (str_starts_with($originalPath, 'http')) {
+            return $originalPath;
+        }
+
+        // Получаем абсолютный путь к файлу
+        $absolutePath = public_path($originalPath);
+
+        // Генерируем WebP путь
+        $webpPath = getWebpPath($originalPath);
+        $absoluteWebpPath = public_path($webpPath);
+
+        $attributesString = '';
+        foreach ($attributes as $key => $value) {
+            $attributesString .= " {$key}=\"{$value}\"";
+        }
+
+        if ($lazy) {
+            $attributesString .= ' loading="lazy"';
+        }
+
+        // Если WebP существует - используем picture с fallback
+        if (file_exists($absoluteWebpPath)) {
+            return <<<HTML
+<picture>
+    <source srcset="{$webpPath}" type="image/webp">
+    <source srcset="{$originalPath}" type="image/jpeg">
+    <img src="{$originalPath}" alt="{$alt}" class="{$class}"{$attributesString}>
+</picture>
+HTML;
+        }
+
+        // Иначе обычный img
+        return "<img src=\"{$originalPath}\" alt=\"{$alt}\" class=\"{$class}\"{$attributesString}>";
+    }
+}
+
+if (! function_exists('getWebpPath')) {
+    function getWebpPath($originalPath)
+    {
+        $pathInfo = pathinfo($originalPath);
+        return $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
+    }
+}

@@ -1,6 +1,6 @@
     @php $calculatorSettings = app(\App\Filament\Settings\CalculatorSettings::class) @endphp
-    
-    
+
+
     @extends('layouts.app')
     @section('page_title', (strlen($page->title) > 1 ? $page->title : ''))
     @section('seo_title', (strlen($page->seo_title) > 1 ? $page->seo_title : ''))
@@ -16,7 +16,7 @@
             <div class="container">
                 @include('components.breadcrumbs')
                 <div class="titles">{{ __($page->sub_title ?: $page->title) }}</div>
-    
+
                 <div class="block1" id="calc">
                     <div class="block1_left">
                         <div class="item">
@@ -81,10 +81,10 @@
                                     @endforeach
                                 @endif
                             </div>
-    
-    
+
+
                         </div>
-    
+
                         <div class="item">
                             <div class="item_row">
                                 <div class="title">6. {{__("Толщина шва (10мм по умолчанию)")}}</div>
@@ -103,7 +103,7 @@
                             <div class="item_row">
                                 <div class="title">7. {{__("Способ кладки")}}</div>
                             </div>
-    
+
                             @if(!empty($calculatorSettings->methods))
                                 <div class="box kladka">
                                     <div class="left">
@@ -124,8 +124,8 @@
                                     </div>
                                 </div>
                             @endif
-    
-    
+
+
                         </div>
                         <div class="item">
                             <div class="item_row">
@@ -175,7 +175,7 @@
                                 </div>
                             </div>
                         </div>
-    
+
                     </div>
                     <div class="block1_right">
                         <div class="box">
@@ -216,10 +216,10 @@
                     </div>
                 </div>
                 @include('layouts.footer')
-    
+
             </div>
         </main>
-    
+
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
         <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
