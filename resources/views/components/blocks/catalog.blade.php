@@ -13,18 +13,49 @@
                 </svg>
             </div>
         </div>
-        <div class="slider">
+
+        {{-- СТАТИЧЕСКОЕ ПЕРВОЕ ИЗОБРАЖЕНИЕ ДЛЯ LCP --}}
+        @if($products->first())
+            @php($firstProduct = $products->first())
+            <div class="lcp-image-static" style="display: none;">
+                <x-webp-image
+                    src="{{ $firstProduct->getRealFormat('photo') }}"
+                    alt="{{ $firstProduct->title }}"
+                    class="bgi"
+                    :lazy="false"
+                    fetchpriority="high"
+                    :width="300"
+                    :height="200"
+                />
+            </div>
+        @endif
+
+        {{-- СЛАЙДЕР С ОТЛОЖЕННОЙ ИНИЦИАЛИЗАЦИЕЙ --}}
+        <div class="slider" data-delay="2000">
             @foreach($products as $product)
                 <div class="item">
                     <a href="{{ $product->getRealFormat('photo') }}" data-fancybox="catalog-gallery" data-caption="{{ $product->title }}">
-                        {{-- <picture class="bgi">
-                            @if($photo = $product->getWebpFormat('photo'))
-                                <source data-lazy="{{$photo}}" type="image/webp">
-                                <source data-lazy="{{$photo}}" type="image/pjp2">
-                            @endif
-                            <img data-lazy="{{ $product->getRealFormat('photo') }}" alt="{{ $product->title }}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect width='100%25' height='100%25' fill='%23f0f0f0'/%3E%3C/svg%3E">
-                        </picture> --}}
-                        <x-webp-image src="{{ $product->getRealFormat('photo') }}" alt="{{ $product->title }}" class="bgi" :lazy="true" :width="300" :height="200" />
+                        @if($loop->first)
+                            {{-- Первое изображение в слайдере - используем статическое --}}
+                            <x-webp-image
+                                src="{{ $product->getRealFormat('photo') }}"
+                                alt="{{ $product->title }}"
+                                class="bgi"
+                                :lazy="false"
+                                :width="300"
+                                :height="200"
+                            />
+                        @else
+                            {{-- Остальные изображения - ленивая загрузка --}}
+                            <x-webp-image
+                                src="{{ $product->getRealFormat('photo') }}"
+                                alt="{{ $product->title }}"
+                                class="bgi"
+                                :lazy="true"
+                                :width="300"
+                                :height="200"
+                            />
+                        @endif
                     </a>
                     <div class="item_bottom">
                         <div class="item_title">{{ $product->title }}</div>

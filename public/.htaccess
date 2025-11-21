@@ -93,3 +93,24 @@
         Header set Cache-Control "max-age=31536000, public"
     </FilesMatch>
 </IfModule>
+    <FilesMatch "\.(webp|jpg|jpeg|png|gif|ico)$">
+        Header set Cache-Control "max-age=31536000, public, immutable"
+        Header unset ETag
+        FileETag None
+    </FilesMatch>
+
+    # КЭШИРОВАНИЕ ШРИФТОВ И СТИЛЕЙ
+    <FilesMatch "\.(css|js|woff2|woff|ttf)$">
+        Header set Cache-Control "max-age=604800, public"
+    </FilesMatch>
+
+    # BROTLI СЖАТИЕ ЕСЛИ ДОСТУПНО
+    <IfModule mod_brotli.c>
+        AddOutputFilterByType BROTLI_COMPRESS text/plain text/html text/xml text/css text/javascript application/javascript application/xml application/xhtml+xml application/rss+xml application/x-javascript
+    </IfModule>
+
+    # ОПТИМИЗАЦИЯ ДОСТАВКИ ИЗОБРАЖЕНИЙ
+    <IfModule mod_pagespeed.c>
+        ModPagespeed on
+        ModPagespeedEnableFilters rewrite_images,convert_jpeg_to_webp,convert_to_webp_lossless,recompress_images
+    </IfModule>

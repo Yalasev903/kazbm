@@ -17,13 +17,27 @@
             @foreach($products as $product)
                 <div class="item">
                     <a href="{{ $product->getRealFormat('photo') }}" data-fancybox="catalog-gallery" data-caption="{{ $product->title }}">
-                        <picture class="bgi">
-                            @if($photo = $product->getWebpFormat('photo'))
-                                <source data-lazy="{{$photo}}" type="image/webp">
-                                <source data-lazy="{{$photo}}" type="image/pjp2">
-                            @endif
-                            <img data-lazy="{{ $product->getRealFormat('photo') }}" alt="{{ $product->title }}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect width='100%25' height='100%25' fill='%23f0f0f0'/%3E%3C/svg%3E">
-                        </picture>
+                        @if($loop->first)
+                            {{-- Первое изображение - LCP кандидат --}}
+                            <x-webp-image
+                                src="{{ $product->getRealFormat('photo') }}"
+                                alt="{{ $product->title }}"
+                                class="bgi"
+                                :lazy="false"
+                                fetchpriority="high"
+                                :width="300"
+                                :height="200"
+                            />
+                        @else
+                            {{-- Остальные изображения - старая логика --}}
+                            <picture class="bgi">
+                                @if($photo = $product->getWebpFormat('photo'))
+                                    <source data-lazy="{{$photo}}" type="image/webp">
+                                    <source data-lazy="{{$photo}}" type="image/pjp2">
+                                @endif
+                                <img data-lazy="{{ $product->getRealFormat('photo') }}" alt="{{ $product->title }}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect width='100%25' height='100%25' fill='%23f0f0f0'/%3E%3C/svg%3E">
+                            </picture>
+                        @endif
                     </a>
                     <div class="item_bottom">
                         <div class="item_title">{{ $product->title }}</div>

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Session;
 use App\Models\City;
 use Illuminate\Support\Facades\Blade;
+use Intervention\Image\ImageManagerStatic as Image;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -135,6 +136,8 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('canonicalBase', $canonicalBase);
         });
+        // Оптимизация конкретных проблемных изображений
+        $this->optimizeProblematicImages();
         View::composer('*', function ($view) {
         // Не выполняем для админских путей
         if (request()->is('admin*') ||
@@ -159,4 +162,32 @@ class AppServiceProvider extends ServiceProvider
         $view->with(compact('isOblicSection', 'categories', 'oblicCategories'));
     });
   }
+
+    /**
+     * Оптимизация конкретных больших изображений (приведение к нужным размерам и сжатие).
+     */
+    private function optimizeProblematicImages()
+    {
+        $problemImages = [
+            public_path('images/block4_2.webp') => [537, 302], // Привести к реальному размеру отображения
+            public_path('images/catalog.png') => [800, 400],
+            // Добавьте другие большие файлы из отчета
+        ];
+
+        foreach ($problemImages as $path => $dimensions) {
+            if (file_exists($path)) {
+                try {
+                    $image = Image::make($path);
+                    if ($image->width() > $dimensions[0]) {
+                        $image->resize($dimensions[0], $dimensions[1], function ($constraint) {
+                            $constraint->aspectRatio();
+                        });
+                        $image->save($path, 65);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error("Failed to optimize: {$path} - " . $e->getMessage());
+                }
+            }
+        }
+    }
 }

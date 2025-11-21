@@ -29,6 +29,27 @@
 
     <!-- КРИТИЧЕСКИЙ CSS - встроенный для предотвращения CLS -->
     <style>
+        /* СТАТИЧЕСКОЕ LCP ИЗОБРАЖЕНИЕ */
+        .lcp-image-static {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 200px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* УСКОРЕННАЯ АНИМАЦИЯ ДЛЯ СЛАЙДЕРА */
+        .slider .item {
+            will-change: transform;
+            backface-visibility: hidden;
+        }
+
+        .slider .bgi {
+            transform: translateZ(0);
+        }
         /* Минимальные критические стили для первого экрана */
         .homePage,.container{position:relative}.bg,.bg2{position:absolute;z-index:-1}.bg{top:0;left:0}.bg2{bottom:0;right:0}
         .block1,.block3,.block4,.block5,.block6{margin-bottom:50px}.title{font-size:2rem;text-align:center}
@@ -178,7 +199,7 @@ body {
     @endif
 
     <!-- АСИНХРОННАЯ загрузка CSS с сохранением порядка -->
-    <link rel="preload" href="{{ asset('css/style.css?v='. time()) }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="preload" href="{{ asset('css/style.css?v='. time()) }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="{{ asset('css/dep.min.css?v='. time()) }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="{{ asset('css/animate.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="{{ asset('css/slick.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
