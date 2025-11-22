@@ -70,7 +70,17 @@
             object-fit: cover;
         }
 
-        /* Preloader стили */
+               /* КРИТИЧЕСКИЕ СТИЛИ ДЛЯ ПРЕЛОАДЕРА */
+        body.preload-state {
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        body.preload-state #app {
+            opacity: 0;
+            visibility: hidden;
+        }
+
         .preloader {
             position: fixed;
             top: 0;
@@ -83,19 +93,41 @@
             justify-content: center;
             align-items: center;
         }
+
+        .preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
         .preloader svg {
             animation: pulse 1.5s ease-in-out infinite both;
         }
+
         @keyframes pulse {
             0% { transform: scale(0.8); opacity: 0.5; }
             50% { transform: scale(1); opacity: 1; }
             100% { transform: scale(0.8); opacity: 0.5; }
         }
 
-        /* Базовые стили для заголовка чтобы не было CLS */
+        /* Минимальные критические стили */
+        .hero-main-image {
+            content-visibility: auto;
+            contain-intrinsic-size: 669px 341px;
+        }
+
+        .optimized-image {
+            max-width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        /* Базовые стили чтобы не было CLS */
         .header { position: relative; min-height: 80px; }
-        .catalogPage .banner { min-height: 200px; position: relative; }
-        .calcPage .titles { min-height: 40px; }
+        .homePage,.container{position:relative}
+        .bg,.bg2{position:absolute;z-index:-1}
+        .bg{top:0;left:0}
+        .bg2{bottom:0;right:0}
 
         /* КРИТИЧЕСКИЙ CSS ДЛЯ КАТАЛОГА */
 .catalogPage .banner {
@@ -153,39 +185,6 @@
 @keyframes loading {
     0% { left: -100%; }
     100% { left: 100%; }
-}
-
-/* Локальные шрифты для ускорения загрузки */
-@font-face {
-    font-family: 'Montserrat';
-    src: url('{{ asset('fonts/Montserrat-Regular.ttf') }}') format('truetype');
-    font-display: swap;
-    font-weight: 400;
-}
-
-@font-face {
-    font-family: 'Montserrat';
-    src: url('{{ asset('fonts/Montserrat-Bold.ttf') }}') format('truetype');
-    font-display: swap;
-    font-weight: 700;
-}
-
-@font-face {
-    font-family: 'Montserrat';
-    src: url('{{ asset('fonts/Montserrat-SemiBold.ttf') }}') format('truetype');
-    font-display: swap;
-    font-weight: 600;
-}
-
-/* Предварительная загрузка только самых нужных глифов */
-.font-preload {
-    position: absolute;
-    opacity: 0;
-    font-family: 'Montserrat';
-}
-
-body {
-    font-family: 'Montserrat', Arial, sans-serif;
 }
 
 /* ОПТИМИЗАЦИЯ ДЛЯ МОБИЛЬНЫХ */
@@ -259,27 +258,27 @@ body {
 
     <!-- Yandex.Metrika - отложенная загрузка с улучшениями -->
     <script>
-        // Улучшенная отложенная загрузка метрики
-        function loadYandexMetrika() {
-            if (document.readyState === 'complete') {
-                var script = document.createElement('script');
-                script.src = 'https://mc.yandex.ru/metrika/tag.js';
-                script.onload = function() {
-                    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-                    m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-                    (window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
-                    ym(103848275, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
-                };
-                document.head.appendChild(script);
-            } else {
-                window.addEventListener('load', loadYandexMetrika);
-            }
-        }
+        // // Улучшенная отложенная загрузка метрики
+        // function loadYandexMetrika() {
+        //     if (document.readyState === 'complete') {
+        //         var script = document.createElement('script');
+        //         script.src = 'https://mc.yandex.ru/metrika/tag.js';
+        //         script.onload = function() {
+        //             (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        //             m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+        //             (window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
+        //             ym(103848275, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
+        //         };
+        //         document.head.appendChild(script);
+        //     } else {
+        //         window.addEventListener('load', loadYandexMetrika);
+        //     }
+        // }
 
-        // Запускаем после полной загрузки страницы
-        window.addEventListener('load', function() {
-            setTimeout(loadYandexMetrika, 3000); // Задержка 3 секунды после загрузки
-        });
+        // // Запускаем после полной загрузки страницы
+        // window.addEventListener('load', function() {
+        //     setTimeout(loadYandexMetrika, 3000); // Задержка 3 секунды после загрузки
+        // });
     </script>
 
 </head>
@@ -307,6 +306,11 @@ body {
 
 <!-- Fallback для отключенного JavaScript -->
 <noscript>
+        <style>
+        .preloader { display: none !important; }
+        body { overflow: auto !important; height: auto !important; }
+        #app { opacity: 1 !important; visibility: visible !important; }
+    </style>
     <link rel="stylesheet" href="{{ asset('css/baguetteBox.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/fancybox.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/jquery-ui.min.css') }}">
@@ -353,19 +357,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Register Service Worker
+// Проверка что все скрипты загружены
+window.addEventListener('load', function() {
+    console.log('Page fully loaded');
+    console.log('jQuery available:', typeof jQuery !== 'undefined');
+    console.log('AJAX ready:', typeof $ !== 'undefined' && $.ajax);
+});
+
 if ('serviceWorker' in navigator) {
+  // Используем абсолютный путь и правильный scope
+  const swPath = '{{ url("/") }}/sw.js';
+
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('js/sw.js')
+    navigator.serviceWorker.register(swPath, { scope: '/' })
       .then(function(registration) {
-        console.log('ServiceWorker registration successful');
+        console.log('SW registered with scope: ', registration.scope);
       })
       .catch(function(err) {
-        console.log('ServiceWorker registration failed: ', err);
+        console.log('SW registration failed: ', err);
       });
   });
 }
 </script>
-
+@yield('scripts')
 </body>
 </html>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\City;
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class AjaxController extends Controller
@@ -55,44 +56,58 @@ class AjaxController extends Controller
         ]);
     }
 
-public function products(Request $request)
-{
-    // 🔑 УСТАНАВЛИВАЕМ ГОРОД ДЛЯ AJAX ЗАПРОСОВ
-    $citySlug = $request->get('city') ?? $request->cookie('selected_city') ?? null;
+    public function products(Request $request)
+    {
+        \Log::debug('AJAX Products Request', [
+            'url' => $request->fullUrl(),
+            'query' => $request->all(),
+            'city' => $request->get('city'),
+            'page' => $request->get('page')
+        ]);
 
-    if ($citySlug) {
-        $city = City::where('slug', $citySlug)->first();
-        if (!$city) {
+        // 🔑 УСТАНАВЛИВАЕМ ГОРОД ДЛЯ AJAX ЗАПРОСОВ
+        $citySlug = $request->get('city') ?? $request->cookie('selected_city') ?? null;
+
+        if ($citySlug) {
+            $city = City::where('slug', $citySlug)->first();
+            if (!$city) {
+                $city = City::where('is_default', true)->first() ?? City::first();
+            }
+        } else {
             $city = City::where('is_default', true)->first() ?? City::first();
         }
-    } else {
-        $city = City::where('is_default', true)->first() ?? City::first();
+
+        app()->instance('currentCity', $city);
+        view()->share('currentCity', $city);
+
+        $footerCity = City::where('slug', 'pavlodar')->first() ?? $city;
+        app()->instance('footerCity', $footerCity);
+        view()->share('footerCity', $footerCity);
+
+        // 🔑 ПРОВЕРЯЕМ, ЕСЛИ ЭТО ЗАПРОС ДЛЯ ОБЛИЦОВОЧНОГО КИРПИЧА
+        $isOblic = $request->get('is_oblic') || $request->is('ajax/filter/oblic-products');
+
+        if ($isOblic) {
+            // Используем отдельный метод для облицовочного кирпича
+            $catalogData = $this->getOblicCatalogData($request);
+        } else {
+            // Стандартный каталог
+            $catalogData = (new Product)->getCatalogData($request);
+        }
+
+        \Log::debug('AJAX Products Response', [
+            'products_count' => $catalogData['products']->count(),
+            'total' => $catalogData['products']->total(),
+            'current_page' => $catalogData['products']->currentPage(),
+            'last_page' => $catalogData['products']->lastPage()
+        ]);
+
+        return response()->json([
+            'query' => $request->getQueryString() ?? '',
+            'html' => view($isOblic ? 'components.catalog.oblic_items' : 'components.catalog.items', $catalogData)->render(),
+            'paginate' => $catalogData['products']->links()->render()
+        ]);
     }
-
-    app()->instance('currentCity', $city);
-    view()->share('currentCity', $city);
-
-    $footerCity = City::where('slug', 'pavlodar')->first() ?? $city;
-    app()->instance('footerCity', $footerCity);
-    view()->share('footerCity', $footerCity);
-
-    // 🔑 ПРОВЕРЯЕМ, ЕСЛИ ЭТО ЗАПРОС ДЛЯ ОБЛИЦОВОЧНОГО КИРПИЧА
-    $isOblic = $request->get('is_oblic') || $request->is('ajax/filter/oblic-products');
-
-    if ($isOblic) {
-        // Используем отдельный метод для облицовочного кирпича
-        $catalogData = $this->getOblicCatalogData($request);
-    } else {
-        // Стандартный каталог
-        $catalogData = (new Product)->getCatalogData($request);
-    }
-
-    return response()->json([
-        'query' => $request->getQueryString(),
-        'html' => view($isOblic ? 'components.catalog.oblic_items' : 'components.catalog.items', $catalogData)->render(),
-        'paginate' => $catalogData['products']->links()->render()
-    ]);
-}
 
     private function getOblicCatalogData(Request $request): array
     {
@@ -127,6 +142,13 @@ public function products(Request $request)
     // Добавьте отдельный маршрут для облицовочного кирпича
     public function oblicProducts(Request $request)
     {
+        \Log::debug('Oblic Products AJAX Request', [
+            'url' => $request->fullUrl(),
+            'query' => $request->all(),
+            'city' => $request->get('city'),
+            'page' => $request->get('page')
+        ]);
+
         return $this->products($request);
     }
 }

@@ -1,4 +1,3 @@
-@php(\Log::debug('category view vars', ['seoTitle' => $seoTitle ?? null, 'seo_title' => $seo_title ?? null]))
 @extends('layouts.app')
 
 @section('content')
@@ -58,20 +57,83 @@
         </div>
     </main>
 @endsection
+@section('scripts')
+<script type="text/javascript">
+// 🔴 ЖДЕМ, ПОКА JQUERY ЗАГРУЗИТСЯ
+function initCatalog() {
+    // Catalog scripts initialized
 
-{{-- @section('scripts')
-<script type="text/javascript" defer>
-// Улучшенная инициализация с предотвращением forced reflow
-function initCatalogScripts() {
-    localStorage.setItem('productQueryString', '');
+    // 🔴 ГЛОБАЛЬНАЯ ФУНКЦИЯ AJAX REQUEST
+    window.ajaxRequest = function(queryString = '', page = 1) {
+    // AJAX request
 
-    // Оптимизированная инициализация слайдера
+        const citySlug = $('meta[name="city-slug"]').attr('content');
+        let fullQueryString = queryString;
+
+        if (citySlug && !fullQueryString.includes('city=')) {
+            fullQueryString += (fullQueryString ? '&' : '') + 'city=' + citySlug;
+        }
+
+        let url = '/ajax/filter/products?page=' + page;
+        if (fullQueryString) {
+            if (fullQueryString.startsWith('&')) {
+                fullQueryString = fullQueryString.substring(1);
+            }
+            url += '&' + fullQueryString;
+        }
+
+    // ajax URL built
+
+        // Показываем индикатор загрузки
+        $('.catalogItems').addClass('loading');
+
+        $.ajax({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            url: url,
+            type: "GET",
+            success: function(response){
+                // response received
+                $(".catalogItems").html(response.html);
+                $(".catalogPage .pogination_block").html(response.paginate);
+                localStorage.setItem('productQueryString', response.query || '');
+
+                // Переинициализируем пагинацию после загрузки контента
+                initializePagination();
+
+                // Инициализируем слайдеры
+                setTimeout(initProductSliders, 100);
+
+                // Скрываем индикатор загрузки
+                $('.catalogItems').removeClass('loading');
+
+                // Прокручиваем к верху товаров
+                $('html, body').animate({
+                    scrollTop: $(".block2_prod").offset().top - 100
+                }, 500);
+            },
+            error: function(xhr, status, error) {
+                // ajax error
+                $('.catalogItems').removeClass('loading');
+
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Произошла ошибка при загрузке товаров');
+                }
+            }
+        });
+    };
+
+    // 🔴 БАЗОВАЯ ФУНКЦИЯ ДЛЯ ИНИЦИАЛИЗАЦИИ СЛАЙДЕРОВ
     function initProductSliders() {
-        const $sliders = $('.card .card_slider');
+    // initialize product sliders
 
-        // Используем requestAnimationFrame для предотвращения forced reflow
-        requestAnimationFrame(() => {
-            $sliders.slick({
+        // Сначала уничтожаем все существующие слайдеры
+        if ($.fn.slick) {
+            $('.card .card_slider.slick-initialized').slick('unslick');
+
+            // Затем инициализируем заново
+            $('.card .card_slider').not('.slick-initialized').slick({
                 slidesToShow: 1,
                 slidesToScroll: 1,
                 dots: true,
@@ -80,281 +142,191 @@ function initCatalogScripts() {
                 focusOnSelect: false,
                 variableWidth: false,
                 lazyLoad: 'ondemand',
-                waitForAnimate: false, // Добавляем для оптимизации
                 responsive: [
                     {
                         breakpoint: 576,
                         settings: {
                             arrows: false,
-                            waitForAnimate: false
+                            dots: true
                         },
                     },
                 ],
-            }).on('init afterChange', function(event, slick) {
-                // Оптимизированная ленивая загрузка
-                const $slider = $(this);
-                const $activeSlide = $slider.find('.slick-active');
-
-                // Загружаем только активное изображение сразу
-                $activeSlide.find('img[data-lazy]').each(function() {
-                    const $img = $(this);
-                    const src = $img.attr('data-lazy');
-                    if (src && !$img.attr('src').includes('data:image')) {
-                        // Используем Image для предзагрузки
-                        const preloadImage = new Image();
-                        preloadImage.src = src;
-                        preloadImage.onload = function() {
-                            $img.attr('src', src).removeAttr('data-lazy');
-                        };
-                    }
-                });
             });
-        });
-    }
-
-    // Отложенная инициализация слайдеров
-    function initSlidersWhenIdle() {
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => {
-                initProductSliders();
-            }, { timeout: 2000 });
-        } else {
-            // Fallback для старых браузеров
-            setTimeout(initProductSliders, 1000);
         }
     }
 
-    // Остальной код остается таким же...
-    $(".clearFilterBtn").on('click', function (e) {
+    // 🔴 ФУНКЦИЯ ИНИЦИАЛИЗАЦИИ ПАГИНАЦИИ
+ function initializePagination() {
+    // initialize pagination
+
+    // Удаляем старые обработчики
+    $(document).off('click', '.pogination_block a, .pagination a');
+
+    // Добавляем рабочий обработчик для всех ссылок пагинации
+    $(document).on('click', '.pogination_block a, .pagination a', function(e) {
         e.preventDefault();
-        ajaxRequest();
-    });
+        e.stopPropagation();
+    // pagination clicked
 
-    // Оптимизированная инициализация слайдера цены
-    function initPriceSlider() {
-        const $slider = $("#slider-range");
-        if ($slider.length) {
-            requestAnimationFrame(() => {
-                $slider.slider({
-                    range: true,
-                    min: parseInt($slider.data('min')),
-                    max: parseInt($slider.data('max')),
-                    values: [parseInt($(".minVal").val()), parseInt($(".maxVal").val())],
-                    slide: function(event, ui) {
-                        $(".minVal").val(ui.values[0]);
-                        $(".maxVal").val(ui.values[1]);
-                        // Дебаунс для предотвращения частых запросов
-                        clearTimeout(window.priceUpdateTimeout);
-                        window.priceUpdateTimeout = setTimeout(() => {
-                            updatePrice(ui.values[0], ui.values[1]);
-                        }, 300);
-                    }
-                });
-            });
+        // Пробуем получить data-href, если нет - берем обычный href
+        let href = $(this).data('href') || $(this).attr('href');
+
+        if (!href) {
+            console.error('No href found in pagination link');
+            return;
         }
-    }
 
-    // Инициализируем слайдер цены после загрузки DOM
-    initPriceSlider();
+    // pagination href
 
-    // Остальные обработчики...
-    $(".minVal, .maxVal").on('input', function (e) {
-        $("#slider-range").slider("values", 0, $(".minVal").val());
-        $("#slider-range").slider("values", 1, $(".maxVal").val());
+        // Извлекаем номер страницы из URL
+        const url = new URL(href, window.location.origin);
+        const page = url.searchParams.get('page') || 1;
 
-        clearTimeout(window.priceUpdateTimeout);
-        window.priceUpdateTimeout = setTimeout(() => {
-            updatePrice($(".minVal").val(), $(".maxVal").val());
-        }, 300);
+    // loading page
+
+        // Вызываем функцию напрямую
+        if (typeof window.ajaxRequest === 'function') {
+            window.ajaxRequest('', page);
+        } else {
+            console.error('ajaxRequest not found');
+        }
     });
 
-    // Инициализация слайдеров товаров после небольшой задержки
-    setTimeout(initSlidersWhenIdle, 500);
+    // pagination initialized
 }
 
-// Запускаем когда DOM готов
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initCatalogScripts);
-} else {
-    setTimeout(initCatalogScripts, 100);
-}
-</script>
-@endsection --}}
-@section('scripts')
-    <script type="text/javascript">
-        $(function () {
-            localStorage.setItem('productQueryString', '');
+    // 🔴 ОСНОВНОЙ КОД ПРИ ЗАГРУЗКЕ ДОКУМЕНТА
+    $(document).ready(function () {
+    // catalog scripts loaded
+    localStorage.setItem('productQueryString', '');
 
-            // $(".applyFilterBtn").on('click', function (e) {
-            //     e.preventDefault();
-            //     let query = localStorage.getItem('productQueryString');
-            //     ajaxRequest(query, 1)
-            // })
+        // 🔴 ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
+        initializePagination();
 
-            $(".clearFilterBtn").on('click', function (e) {
-                e.preventDefault(); ajaxRequest();
-            })
+    // Инициализируем слайдеры при загрузке
+    requestAnimationFrame(initProductSliders);
 
+        // 🔴 ОБРАБОТЧИКИ ФИЛЬТРОВ
+        $(".clearFilterBtn").on('click', function (e) {
+            e.preventDefault();
+            // clear filter clicked
+            window.ajaxRequest();
+        });
+
+        // Инициализация слайдера цены
+        if ($("#slider-range").length && $.fn.slider) {
             $("#slider-range").slider({
                 range: true,
-                min: parseInt($( "#slider-range" ).data('min')),
-                max: parseInt($( "#slider-range" ).data('max')),
-                values: [ parseInt($( ".minVal" ).val()), parseInt($( ".maxVal" ).val()) ],
-                slide: function( event, ui ) {
-                    $( ".minVal" ).val(ui.values[0]);
-                    $( ".maxVal" ).val(ui.values[1]);
-
-                    updatePrice(ui.values[0], ui.values[1])
+                min: parseInt($("#slider-range").data('min')),
+                max: parseInt($("#slider-range").data('max')),
+                values: [parseInt($(".minVal").val()), parseInt($(".maxVal").val())],
+                slide: function(event, ui) {
+                    $(".minVal").val(ui.values[0]);
+                    $(".maxVal").val(ui.values[1]);
+                    updatePrice(ui.values[0], ui.values[1]);
                 }
             });
-            $(".minVal, .maxVal").on('input', function (e) {
-                $( "#slider-range" ).slider( "values", 0, $( ".minVal" ).val());
-                $( "#slider-range" ).slider( "values", 1, $( ".maxVal" ).val());
+        }
 
-                updatePrice($( ".minVal" ).val(), $( ".maxVal" ).val())
-            });
-
-$(".filter .checkbox input[type='checkbox']").on('change', function (e) {
-    e.preventDefault();
-
-    let sizes = [];
-    $(".checkbox input[type='checkbox']:checked").each(function (index, item) {
-        sizes.push(item.value);
-    })
-
-    let query = localStorage.getItem('productQueryString');
-    let queryString = '';
-
-    query = new URLSearchParams(query);
-
-    if (query.has('price') && query.get('price')) {
-        queryString += '&price=' + query.get('price');
-    }
-
-    if (query.has('color') && query.get('color')) {
-        queryString += '&color=' + query.get('color');
-    }
-
-    if (sizes.length > 0) {
-        queryString += '&size=' + sizes.join(',');
-    }
-
-    // Получаем город и добавляем его
-    const citySlug = $('meta[name="city-slug"]').attr('content');
-    if (citySlug) {
-        queryString += '&city=' + citySlug;
-    }
-
-    ajaxRequest(queryString, 1)
-})
-
-$(".filter .elmt").on('click', function (e) {
-    e.preventDefault();
-
-    let query = localStorage.getItem('productQueryString');
-    let queryString = '';
-
-    query = new URLSearchParams(query);
-
-    if (query.has('price') && query.get('price')) {
-        queryString += '&price=' + query.get('price');
-    }
-
-    if (query.has('size') && query.get('size')) {
-        queryString += '&size=' + query.get('size');
-    }
-
-    var color = query.has('color') ? parseInt(query.get('color')) : 0,
-        currentValue = color === 0 ? $(this).data('id') : (color === $(this).data('id') ? 0 : $(this).data('id'));
-    if (currentValue !== 0) {
-        queryString += '&color=' + currentValue
-    }
-
-    // Получаем город и добавляем его
-    const citySlug = $('meta[name="city-slug"]').attr('content');
-    if (citySlug) {
-        queryString += '&city=' + citySlug;
-    }
-
-    ajaxRequest(queryString, 1)
-})
-
-function updatePrice(fromPrice, toPrice) {
-    let query = localStorage.getItem('productQueryString');
-    let queryString = '';
-
-    query = new URLSearchParams(query);
-
-    if (query.has('color') && query.get('color')) {
-        queryString += '&color=' + query.get('color');
-    }
-
-    if (query.has('size') && query.get('size')) {
-        queryString += '&size=' + query.get('size');
-    }
-
-    queryString += '&price=' + fromPrice + ',' + toPrice;
-
-    // Получаем город и добавляем его
-    const citySlug = $('meta[name="city-slug"]').attr('content');
-    if (citySlug) {
-        queryString += '&city=' + citySlug;
-    }
-
-    ajaxRequest(queryString, 1)
-}
-
-            getPaginations();
-
-function getPaginations() {
-    let items = $(".pogination .pagination_item:not('.active')")
-    if (items.length > 0) {
-        items.each(function () {
-            $(this).on('click', function (e) {
-                e.preventDefault();
-
-                // Получаем URL из data-href
-                let fullUrl = $(this).data('href');
-                let url = new URL(fullUrl);
-
-                // Извлекаем номер страницы из параметра 'page'
-                let page = url.searchParams.get('page') || 1;
-
-                let query = localStorage.getItem('productQueryString');
-                let queryString = '';
-
-                if (query) {
-                    query = new URLSearchParams(query);
-
-                    if (query.has('price') && query.get('price')) {
-                        queryString += '&price=' + query.get('price');
-                    }
-
-                    if (query.has('size') && query.get('size')) {
-                        queryString += '&size=' + query.get('size');
-                    }
-
-                    if (query.has('color') && query.get('color')) {
-                        queryString += '&color=' + query.get('color');
-                    }
-                }
-
-                // 🔑 ДОБАВЛЯЕМ ГОРОД К ЗАПРОСУ
-                const citySlug = $('meta[name="city-slug"]').attr('content');
-                if (citySlug) {
-                    queryString += '&city=' + citySlug;
-                }
-
-                ajaxRequest(queryString, page);
-            });
+        // Обработчики для полей ввода цены
+        $(".minVal, .maxVal").on('input', function (e) {
+            if ($("#slider-range").length && $.fn.slider) {
+                $("#slider-range").slider("values", 0, $(".minVal").val());
+                $("#slider-range").slider("values", 1, $(".maxVal").val());
+            }
+            updatePrice($(".minVal").val(), $(".maxVal").val());
         });
-    }
-}
 
-            function updatePrice(fromPrice, toPrice) {
-                let query = localStorage.getItem('productQueryString');
-                let queryString = '';
+        // Обработчик для чекбоксов размеров
+        $(document).on('change', ".filter .checkbox input[type='checkbox']", function (e) {
+            e.preventDefault();
+            console.log('Size filter changed');
 
+            let sizes = [];
+            $(".checkbox input[type='checkbox']:checked").each(function (index, item) {
+                sizes.push(item.value);
+            });
+
+            let query = localStorage.getItem('productQueryString');
+            let queryString = '';
+
+            if (query) {
+                query = new URLSearchParams(query);
+
+                if (query.has('price') && query.get('price')) {
+                    queryString += '&price=' + query.get('price');
+                }
+
+                if (query.has('color') && query.get('color')) {
+                    queryString += '&color=' + query.get('color');
+                }
+
+                if (sizes.length > 0) {
+                    queryString += '&size=' + sizes.join(',');
+                }
+            } else {
+                if (sizes.length > 0) {
+                    queryString += '&size=' + sizes.join(',');
+                }
+            }
+
+            // Получаем город и добавляем его
+            const citySlug = $('meta[name="city-slug"]').attr('content');
+            if (citySlug) {
+                queryString += '&city=' + citySlug;
+            }
+
+            console.log('Size filter query:', queryString);
+            window.ajaxRequest(queryString, 1);
+        });
+
+        // Обработчик для цветов
+        $(document).on('click', ".filter .elmt", function (e) {
+            e.preventDefault();
+            console.log('Color filter clicked');
+
+            let query = localStorage.getItem('productQueryString');
+            let queryString = '';
+
+            if (query) {
+                query = new URLSearchParams(query);
+
+                if (query.has('price') && query.get('price')) {
+                    queryString += '&price=' + query.get('price');
+                }
+
+                if (query.has('size') && query.get('size')) {
+                    queryString += '&size=' + query.get('size');
+                }
+
+                var color = query.has('color') ? parseInt(query.get('color')) : 0;
+                var currentValue = color === 0 ? $(this).data('id') : (color === $(this).data('id') ? 0 : $(this).data('id'));
+
+                if (currentValue !== 0) {
+                    queryString += '&color=' + currentValue;
+                }
+            } else {
+                var currentValue = $(this).data('id');
+                if (currentValue !== 0) {
+                    queryString += '&color=' + currentValue;
+                }
+            }
+
+            // Получаем город и добавляем его
+            const citySlug = $('meta[name="city-slug"]').attr('content');
+            if (citySlug) {
+                queryString += '&city=' + citySlug;
+            }
+
+            console.log('Color filter query:', queryString);
+            window.ajaxRequest(queryString, 1);
+        });
+
+        function updatePrice(fromPrice, toPrice) {
+            let query = localStorage.getItem('productQueryString');
+            let queryString = '';
+
+            if (query) {
                 query = new URLSearchParams(query);
 
                 if (query.has('color') && query.get('color')) {
@@ -364,70 +336,171 @@ function getPaginations() {
                 if (query.has('size') && query.get('size')) {
                     queryString += '&size=' + query.get('size');
                 }
-
-                queryString += '&price=' + fromPrice + ',' + toPrice;
-                ajaxRequest(queryString, 1)
             }
 
-            function ajaxRequest(queryString = '', page = 1) {
-                // Получаем текущий город из мета-тега
-                const citySlug = $('meta[name="city-slug"]').attr('content');
+            queryString += '&price=' + fromPrice + ',' + toPrice;
 
-                // Добавляем город к queryString
-                let fullQueryString = queryString;
-                if (citySlug) {
-                    fullQueryString += '&city=' + citySlug;
-                }
-
-                $.ajax({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    url: '/ajax/filter/products?page=' + page + fullQueryString,
-                    type: "GET",
-                    success: function(response){
-                        $(".catalogItems").html(response.html)
-                        $(".catalogPage .pogination_block").html(response.paginate)
-                        localStorage.setItem('productQueryString', response.query)
-                        getPaginations()
-
-                        $('.card .card_slider').slick({
-                            slidesToShow: 1,
-                            slidesToScroll: 1,
-                            dots: true,
-                            arrows: false,
-                            infinite: false,
-                            focusOnSelect: false,
-                            variableWidth: false,
-                            lazyLoad: 'ondemand',
-                            responsive: [
-                                {
-                                    breakpoint: 576,
-                                    settings: {
-                                        arrows: false
-                                    },
-                                },
-                            ],
-                        }).on('init afterChange', function(event, slick) {
-                            const $slider = $(this);
-                            const $activeSlides = $slider.find('.slick-active');
-                            const $nextSlides = $slider.find('.slick-active').next();
-                            const $prevSlides = $slider.find('.slick-active').prev();
-
-                            $activeSlides.add($nextSlides).add($prevSlides).find('img[data-lazy]').each(function() {
-                                const $img = $(this);
-                                const src = $img.attr('data-lazy');
-                                if (src && !$img.attr('src').includes('data:image')) {
-                                    $img.attr('src', src).removeAttr('data-lazy');
-                                }
-                            });
-                        });
-                    },
-                    error: function(data) {
-                        console.log(data)
-                    }
-                });
+            // Получаем город и добавляем его
+            const citySlug = $('meta[name="city-slug"]').attr('content');
+            if (citySlug) {
+                queryString += '&city=' + citySlug;
             }
-        })
-    </script>
+
+            console.log('Price update query:', queryString);
+            window.ajaxRequest(queryString, 1);
+        }
+
+        // Дополнительная проверка
+        setTimeout(function() {
+                // final check removed in production
+        }, 2000);
+    });
+    $(document).on('click', '.pagination_item', function(e) {
+    e.preventDefault();
+    const href = $(this).data('href') || $(this).attr('href');
+    if (!href) return;
+    const url = new URL(href, window.location.origin);
+    const page = url.searchParams.get('page') || 1;
+    if (typeof window.ajaxRequest === 'function') {
+        window.ajaxRequest('', page);
+    }
+});
+}
+
+// 🔴 ИСПРАВЛЕННЫЕ ОБРАБОТЧИКИ ФИЛЬТРОВ
+function initializeFilters() {
+    // initialize filters
+
+    // Обработчик очистки фильтров
+    $(".clearFilterBtn").off('click').on('click', function (e) {
+        e.preventDefault();
+    // clear filter clicked
+        window.ajaxRequest();
+    });
+
+    // Инициализация слайдера цены
+    if ($("#slider-range").length && $.fn.slider) {
+        $("#slider-range").slider({
+            range: true,
+            min: parseInt($("#slider-range").data('min')),
+            max: parseInt($("#slider-range").data('max')),
+            values: [parseInt($(".minVal").val()), parseInt($(".maxVal").val())],
+            slide: function(event, ui) {
+                $(".minVal").val(ui.values[0]);
+                $(".maxVal").val(ui.values[1]);
+                updatePrice(ui.values[0], ui.values[1]);
+            }
+        });
+    }
+
+    // Обработчики для полей ввода цены
+    $(".minVal, .maxVal").off('input').on('input', function (e) {
+        if ($("#slider-range").length && $.fn.slider) {
+            $("#slider-range").slider("values", 0, $(".minVal").val());
+            $("#slider-range").slider("values", 1, $(".maxVal").val());
+        }
+        updatePrice($(".minVal").val(), $(".maxVal").val());
+    });
+
+    // Обработчик для чекбоксов размеров
+    $(document).off('change', ".filter .checkbox input[type='checkbox']").on('change', ".filter .checkbox input[type='checkbox']", function (e) {
+        e.preventDefault();
+    // size filter changed
+
+        let sizes = [];
+        $(".checkbox input[type='checkbox']:checked").each(function (index, item) {
+            sizes.push(item.value);
+        });
+
+        let query = localStorage.getItem('productQueryString');
+        let queryString = '';
+
+        if (query) {
+            query = new URLSearchParams(query);
+
+            if (query.has('price') && query.get('price')) {
+                queryString += '&price=' + query.get('price');
+            }
+
+            if (query.has('color') && query.get('color')) {
+                queryString += '&color=' + query.get('color');
+            }
+
+            if (sizes.length > 0) {
+                queryString += '&size=' + sizes.join(',');
+            }
+        } else {
+            if (sizes.length > 0) {
+                queryString += '&size=' + sizes.join(',');
+            }
+        }
+
+        // Получаем город и добавляем его
+        const citySlug = $('meta[name="city-slug"]').attr('content');
+        if (citySlug) {
+            queryString += '&city=' + citySlug;
+        }
+
+            // size filter query ready
+        window.ajaxRequest(queryString, 1);
+    });
+
+    // Обработчик для цветов
+    $(document).off('click', ".filter .elmt").on('click', ".filter .elmt", function (e) {
+        e.preventDefault();
+            // color filter clicked
+
+        let query = localStorage.getItem('productQueryString');
+        let queryString = '';
+
+        if (query) {
+            query = new URLSearchParams(query);
+
+            if (query.has('price') && query.get('price')) {
+                queryString += '&price=' + query.get('price');
+            }
+
+            if (query.has('size') && query.get('size')) {
+                queryString += '&size=' + query.get('size');
+            }
+
+            var color = query.has('color') ? parseInt(query.get('color')) : 0;
+            var currentValue = color === 0 ? $(this).data('id') : (color === $(this).data('id') ? 0 : $(this).data('id'));
+
+            if (currentValue !== 0) {
+                queryString += '&color=' + currentValue;
+            }
+        } else {
+            var currentValue = $(this).data('id');
+            if (currentValue !== 0) {
+                queryString += '&color=' + currentValue;
+            }
+        }
+
+        // Получаем город и добавляем его
+        const citySlug = $('meta[name="city-slug"]').attr('content');
+        if (citySlug) {
+            queryString += '&city=' + citySlug;
+        }
+
+            // color filter query ready
+        window.ajaxRequest(queryString, 1);
+    });
+
+    // filters initialized
+}
+
+// 🔴 ЗАПУСКАЕМ КОД ТОЛЬКО КОГДА JQUERY ГОТОВ
+if (typeof jQuery === 'undefined') {
+    // Ждем пока jQuery загрузится
+    var checkJquery = setInterval(function() {
+        if (typeof jQuery !== 'undefined') {
+            clearInterval(checkJquery);
+            initCatalog();
+        }
+    }, 100);
+} else {
+    initCatalog();
+}
+</script>
 @endsection
