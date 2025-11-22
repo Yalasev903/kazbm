@@ -29,6 +29,15 @@
 
     <!-- КРИТИЧЕСКИЙ CSS - встроенный для предотвращения CLS -->
     <style>
+        .hero-main-image {
+            content-visibility: auto;
+            contain-intrinsic-size: 669px 341px;
+        }
+
+        /* Предотвращение CLS для изображений */
+        .optimized-image {
+            aspect-ratio: attr(width) / attr(height);
+        }
         /* СТАТИЧЕСКОЕ LCP ИЗОБРАЖЕНИЕ */
         .lcp-image-static {
             position: absolute;
@@ -168,8 +177,46 @@
     font-weight: 600;
 }
 
+/* Предварительная загрузка только самых нужных глифов */
+.font-preload {
+    position: absolute;
+    opacity: 0;
+    font-family: 'Montserrat';
+}
+
 body {
     font-family: 'Montserrat', Arial, sans-serif;
+}
+
+/* ОПТИМИЗАЦИЯ ДЛЯ МОБИЛЬНЫХ */
+@media (max-width: 768px) {
+    .hero-main-image {
+        width: 100vw;
+        height: auto;
+        max-width: 100%;
+    }
+
+    .slider .item {
+        min-height: 300px !important;
+    }
+
+    /* Ускорение анимаций на мобильных */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Предотвращение зума при фокусе на iOS */
+    input, select, textarea {
+        font-size: 16px;
+    }
+}
+
+/* ПРЕДЗАГРУЗКА КРИТИЧЕСКИХ РЕСУРСОВ ДЛЯ МОБИЛЬНЫХ */
+@media (max-width: 768px) {
+    .hero-main-image {
+        font-display: swap;
+        image-rendering: -webkit-optimize-contrast;
+    }
 }
 </style>
     <!-- Предзагрузка самых важных ресурсов -->

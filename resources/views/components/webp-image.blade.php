@@ -8,9 +8,37 @@
     'width' => null,
     'height' => null,
     'fetchpriority' => 'auto',
+     'containerWidth' => null, // Новый параметр для ширины контейнера
+     'containerHeight' => null, // Новый параметр для высоты контейнера
 ])
 
 @php
+    // Автоматически определяем нужный размер на основе контейнера
+        $optimalSize = 'original';
+        if ($containerWidth && $containerHeight) {
+            if ($containerWidth <= 400) $optimalSize = 'sm';
+            elseif ($containerWidth <= 600) $optimalSize = 'md';
+            elseif ($containerWidth <= 800) $optimalSize = 'lg';
+            else $optimalSize = 'xl';
+        }
+
+        $pathInfo = pathinfo($src);
+        $optimalPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '_' . $optimalSize . '.' . $pathInfo['extension'];
+        $optimalWebpPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '_' . $optimalSize . '.webp';
+
+        // Используем оптимальный размер если существует
+        if (file_exists(public_path($optimalWebpPath))) {
+            $webpPath = $optimalWebpPath;
+            $finalSrc = $optimalPath;
+            $hasOptimal = true;
+        } else {
+            $webpPath = getWebpPath($src);
+            $finalSrc = $src;
+            $hasOptimal = false;
+        }
+
+        $hasWebp = file_exists(public_path($webpPath));
+
     // Оптимизация: проверяем WebP только в production
     if (app()->environment('production')) {
         $webpPath = getWebpPath($src);

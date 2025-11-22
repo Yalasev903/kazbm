@@ -10,38 +10,46 @@ class ForceImageOptimization extends Command
     protected $signature = 'images:force-optimize
                            {--quality=60 : Quality (1-100)}
                            {--max-width=1200 : Maximum width}
-                           {--generate-sizes : Generate multiple responsive sizes}';
+                           {--generate-sizes : Generate multiple responsive sizes}
+                           {--dir= : Process specific directory only}'; // ДОБАВЛЕНО
 
     protected $description = 'Force image optimization with aggressive settings';
 
-    // Добавляем конфигурацию адаптивных размеров
     private $responsiveSizes = [
-        'xl' => [1200, 800],    // Большие экраны
-        'lg' => [800, 600],     // Десктопы
-        'md' => [600, 400],     // Планшеты
-        'sm' => [400, 300],     // Мобильные
-        'thumb' => [300, 200]   // Миниатюры
+        'xl' => [1200, 800],
+        'lg' => [800, 600],
+        'md' => [600, 400],
+        'sm' => [400, 300],
+        'thumb' => [300, 200]
     ];
 
     public function handle()
     {
-        $directories = [
-            storage_path('app/public/products'),
-            storage_path('app/public/articles'),
-            storage_path('app/public/settings'),
-            public_path('images'),
-        ];
+        // ЕСЛИ УКАЗАНА КОНКРЕТНАЯ ДИРЕКТОРИЯ - ИСПОЛЬЗУЕМ ЕЕ
+        if ($this->option('dir')) {
+            $directories = [$this->option('dir')];
+        } else {
+            // ИНАЧЕ СТАНДАРТНЫЕ ДИРЕКТОРИИ
+            $directories = [
+                storage_path('app/public/products'),
+                storage_path('app/public/articles'),
+                storage_path('app/public/settings'),
+                public_path('images'),
+            ];
+        }
 
         $totalSavings = 0;
         $processed = 0;
 
         foreach ($directories as $directory) {
-            if (!is_dir($directory)) continue;
+            if (!is_dir($directory)) {
+                $this->warn("Directory not found: {$directory}");
+                continue;
+            }
 
             $images = glob($directory . '/*.{jpg,jpeg,png,JPG,JPEG,PNG,webp,WEBP}', GLOB_BRACE);
 
             foreach ($images as $image) {
-                // Основная оптимизация
                 $result = $this->optimizeImage($image);
                 if ($result['success']) {
                     $totalSavings += $result['savings'];
@@ -49,7 +57,6 @@ class ForceImageOptimization extends Command
                     $this->info("✓ {$result['savings_kb']}KB saved: " . basename($image));
                 }
 
-                // Генерация адаптивных размеров если включена опция
                 if ($this->option('generate-sizes')) {
                     $this->generateResponsiveSizes($image);
                 }
@@ -64,6 +71,7 @@ class ForceImageOptimization extends Command
             $this->info("✅ Responsive sizes generated for all images");
         }
     }
+
 
     private function optimizeImage($path)
     {

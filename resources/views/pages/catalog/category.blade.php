@@ -30,6 +30,8 @@
                     :lazy="true"
                     :width="352"
                     :height="235"
+                    containerWidth="352"
+                  containerHeight="235"
                 />
                 <div class="title"><b>{{__("Каталог")}}</b></div>
             </div>

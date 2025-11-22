@@ -44,6 +44,8 @@
                                 :lazy="false"
                                 :width="300"
                                 :height="200"
+                                containerWidth="300"
+                                containerHeight="200"
                             />
                         @else
                             {{-- Остальные изображения - ленивая загрузка --}}
@@ -54,6 +56,8 @@
                                 :lazy="true"
                                 :width="300"
                                 :height="200"
+                                containerWidth="300"
+                                containerHeight="200"
                             />
                         @endif
                     </a>

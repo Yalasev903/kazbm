@@ -22,9 +22,13 @@
             <x-webp-image
                 src="{{ $heroSettings->getRealFormat('photo') }}"
                 alt="hero image"
-                class="hero-main-image"
+                class="hero-main-image optimized-image"
                 :lazy="false"
                 fetchpriority="high"
+                containerWidth="669"
+                containerHeight="341"
+                width="669"
+                height="341"
             />
         </div>
     </div>

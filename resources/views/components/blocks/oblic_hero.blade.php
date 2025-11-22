@@ -23,6 +23,10 @@
                 class="hero-main-image"
                 :lazy="false"
                 fetchpriority="high"
+                containerWidth="669"
+                containerHeight="341"
+                width="669"
+                height="341"
             />
         </div>
     </div>
