@@ -29,6 +29,57 @@
 
     <!-- КРИТИЧЕСКИЙ CSS - встроенный для предотвращения CLS -->
     <style>
+
+        /* НЕМЕДЛЕННОЕ СКРЫТИЕ КОНТЕНТА ДО ЗАГРУЗКИ */
+body.preload-state {
+    overflow: hidden;
+    height: 100vh;
+}
+
+body.preload-state #app {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* ПРЕЛОАДЕР ВСЕГДА ВИДИМ ИЗНАЧАЛЬНО */
+.preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    visibility: visible;
+}
+
+.preloader.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* БАЗОВЫЕ СТИЛИ ДЛЯ ИЗБЕЖАНИЯ CLS */
+.header {
+    position: relative;
+    min-height: 80px;
+    background: transparent;
+}
+.homePage, .container {
+    position: relative;
+    opacity: 0;
+    visibility: hidden;
+}
+.homePage.loaded, .container.loaded {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease;
+}
+
         .hero-main-image {
             content-visibility: auto;
             contain-intrinsic-size: 669px 341px;
@@ -258,38 +309,42 @@
 
     <!-- Yandex.Metrika - отложенная загрузка с улучшениями -->
     <script>
-        // // Улучшенная отложенная загрузка метрики
-        // function loadYandexMetrika() {
-        //     if (document.readyState === 'complete') {
-        //         var script = document.createElement('script');
-        //         script.src = 'https://mc.yandex.ru/metrika/tag.js';
-        //         script.onload = function() {
-        //             (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        //             m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-        //             (window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
-        //             ym(103848275, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
-        //         };
-        //         document.head.appendChild(script);
-        //     } else {
-        //         window.addEventListener('load', loadYandexMetrika);
-        //     }
-        // }
+        // Улучшенная отложенная загрузка метрики
+        function loadYandexMetrika() {
+            if (document.readyState === 'complete') {
+                var script = document.createElement('script');
+                script.src = 'https://mc.yandex.ru/metrika/tag.js';
+                script.onload = function() {
+                    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+                    m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+                    (window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
+                    ym(103848275, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
+                };
+                document.head.appendChild(script);
+            } else {
+                window.addEventListener('load', loadYandexMetrika);
+            }
+        }
 
-        // // Запускаем после полной загрузки страницы
-        // window.addEventListener('load', function() {
-        //     setTimeout(loadYandexMetrika, 3000); // Задержка 3 секунды после загрузки
-        // });
+        // Запускаем после полной загрузки страницы
+        window.addEventListener('load', function() {
+            setTimeout(loadYandexMetrika, 3000); // Задержка 3 секунды после загрузки
+        });
     </script>
 
 </head>
-<body id="app">
-<div class="searchPlatform_bloor" onclick="closeSearch()"></div>
-@include('layouts.header')
+<body class="preload-state">
+    <div id="app">
+        <div class="searchPlatform_bloor" onclick="closeSearch()"></div>
+        @include('layouts.header')
 
-@yield('content')
+        @yield('content')
 
-<!-- Preloader с улучшенной анимацией -->
-<div class="preloader">
+        @include('layouts.modals')
+    </div>
+
+    <!-- Preloader с улучшенной анимацией -->
+    <div class="preloader">
     <svg width="95" height="96" viewBox="0 0 95 96" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path opacity="0.3" d="M41.9096 3.09672L2.5322 42.4686C-0.523154 45.5235 -0.523146 50.4765 2.53221 53.5314L41.9096 92.9033C44.965 95.9582 49.9186 95.9582 52.974 92.9033L92.3514 53.5314C95.4068 50.4765 95.4068 45.5235 92.3514 42.4686L52.974 3.09673C49.9187 0.0418036 44.965 0.0417938 41.9096 3.09672Z" fill="#F0EEE9"></path>
     </svg>
@@ -299,9 +354,9 @@
     <svg width="99" height="100" viewBox="0 0 99 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M44.6949 4.10308L3.37572 45.4164C0.843937 47.9479 0.84392 52.0521 3.3757 54.5836L44.6949 95.897C47.2267 98.4284 51.3315 98.4284 53.8633 95.8969L95.1825 54.5836C97.7143 52.0522 97.7143 47.9479 95.1825 45.4165L53.8633 4.10306C51.3315 1.57164 47.2267 1.57165 44.6949 4.10308Z" stroke="#F0EEE9" stroke-width="2.75487"></path>
     </svg>
+
 </div>
 
-@include('layouts.modals')
 @include('layouts.scripts')
 
 <!-- Fallback для отключенного JavaScript -->
@@ -335,6 +390,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         setTimeout(function() {
             const preloader = document.querySelector('.preloader');
+            function revealApp() {
+                try {
+                    document.body.classList.remove('preload-state');
+                    const app = document.getElementById('app');
+                    if (app) app.classList.add('app-loaded');
+                    document.querySelectorAll('.container, .homePage').forEach(function(el){ el.classList.add('loaded'); });
+                } catch (e) { /* ignore */ }
+            }
+
             if (preloader) {
                 preloader.style.opacity = '0';
                 preloader.style.transition = 'opacity 0.3s ease';
@@ -342,7 +406,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (preloader.parentNode) {
                         preloader.parentNode.removeChild(preloader);
                     }
+                    revealApp();
                 }, 300);
+            } else {
+                revealApp();
             }
         }, remainingTime);
     }
@@ -359,24 +426,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Проверка что все скрипты загружены
 window.addEventListener('load', function() {
-    console.log('Page fully loaded');
-    console.log('jQuery available:', typeof jQuery !== 'undefined');
-    console.log('AJAX ready:', typeof $ !== 'undefined' && $.ajax);
+    // Page fully loaded — no debug logs in production
 });
 
 if ('serviceWorker' in navigator) {
   // Используем абсолютный путь и правильный scope
   const swPath = '{{ url("/") }}/sw.js';
 
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register(swPath, { scope: '/' })
-      .then(function(registration) {
-        console.log('SW registered with scope: ', registration.scope);
-      })
-      .catch(function(err) {
-        console.log('SW registration failed: ', err);
-      });
-  });
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register(swPath, { scope: '/' }).catch(function(){ /* ignore */ });
+    });
 }
 </script>
 @yield('scripts')
