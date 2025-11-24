@@ -12,6 +12,7 @@ use App\Models\City;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 
 class SiteController extends Controller
 {
@@ -259,40 +260,53 @@ class SiteController extends Controller
     {
         $currentCity = app('currentCity');
 
+        // Получаем slug из маршрута (как раньше)
         $slug = $request->route('slug');
-        $category = Category::where('slug', $slug)
-                    ->where('status', true)
-                    ->firstOrFail();
 
-        $colors = ProductColor::query()->select(['id', 'image', 'name'])->get();
-        $mergeData = (new Product)->getCatalogData($request, $category->id);
+        // Формируем ключ кэша с учётом города, slug и query string
+        $cityId = $currentCity->id ?? 'no_city';
+        $cacheKey = "category_{$slug}_{$cityId}_" . md5($request->getQueryString() ?? '');
 
-        $seo = $this->buildSeoForPage($currentCity, 'category', $category);
+        $data = Cache::remember($cacheKey, 7200, function() use ($slug, $request, $currentCity) {
+            $category = Category::where('slug', $slug)
+                        ->where('status', true)
+                        ->firstOrFail();
 
-        // Добавляем шаринг SEO-данных для использования в layout
-        view()->share($seo);
+            $colors = ProductColor::query()->select(['id', 'image', 'name'])->get();
+            $mergeData = (new Product)->getCatalogData($request, $category->id);
 
-        // Нормализация значений с безопасными fallback
-        $seoTitle = $seo['seoTitle'] ?? $category->seo_title ?? $category->name ?? config('app.name');
-        $seoDescription = $seo['seoDescription'] ?? $category->meta_description ?? '';
-        $seoKeywords = $seo['seoKeywords'] ?? $category->meta_keywords ?? '';
-        $h1 = $seo['h1'] ?? $category->title ?? $category->name ?? '';
+            $seo = $this->buildSeoForPage($currentCity, 'category', $category);
 
-        // Передаём в view — явные имена, чтобы layout/шаблон мог использовать любое
-        $viewVars = [
-            'seoTitle' => $seoTitle,
-            'seoDescription' => $seoDescription,
-            'seoKeywords' => $seoKeywords,
-            'h1' => $h1,
+            // Нормализация значений с безопасными fallback
+            $seoTitle = $seo['seoTitle'] ?? $category->seo_title ?? $category->name ?? config('app.name');
+            $seoDescription = $seo['seoDescription'] ?? $category->meta_description ?? '';
+            $seoKeywords = $seo['seoKeywords'] ?? $category->meta_keywords ?? '';
+            $h1 = $seo['h1'] ?? $category->title ?? $category->name ?? '';
 
-            // legacy / snake_case
-            'seo_title' => $seoTitle,
-            'meta_description' => $seoDescription,
-            'meta_keywords' => $seoKeywords,
-            'page_title' => $seoTitle,
-        ];
+            $viewVars = [
+                'seoTitle' => $seoTitle,
+                'seoDescription' => $seoDescription,
+                'seoKeywords' => $seoKeywords,
+                'h1' => $h1,
 
-        return view('pages.catalog.category', array_merge(compact('category', 'colors'), $mergeData, $viewVars));
+                // legacy / snake_case
+                'seo_title' => $seoTitle,
+                'meta_description' => $seoDescription,
+                'meta_keywords' => $seoKeywords,
+                'page_title' => $seoTitle,
+            ];
+
+            // Возвращаем также оригинальный массив $seo для view()->share
+            return array_merge(compact('category', 'colors'), $mergeData, $viewVars, ['seo_raw' => $seo]);
+        });
+
+        // Шарим SEO-данные для layout (если в кэше есть)
+        if (isset($data['seo_raw'])) {
+            view()->share($data['seo_raw']);
+            unset($data['seo_raw']);
+        }
+
+        return view('pages.catalog.category', $data);
     }
     public function getProduct(Request $request)
     {

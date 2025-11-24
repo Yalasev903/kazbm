@@ -54,6 +54,34 @@
 @section('scripts')
 <script type="text/javascript">
 // 🔴 ЖДЕМ, ПОКА JQUERY ЗАГРУЗИТСЯ
+
+function initLazyLoading() {
+    try {
+        const lazyImages = Array.prototype.slice.call(document.querySelectorAll("img.optimized-image[loading=lazy]"));
+
+        if ('IntersectionObserver' in window) {
+            let lazyImageObserver = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        let lazyImage = entry.target;
+                        if (lazyImage.dataset && lazyImage.dataset.src) {
+                            lazyImage.src = lazyImage.dataset.src;
+                        }
+                        lazyImage.classList.remove('lazy');
+                        lazyImageObserver.unobserve(lazyImage);
+                    }
+                });
+            });
+
+            lazyImages.forEach(function(lazyImage) {
+                lazyImageObserver.observe(lazyImage);
+            });
+        }
+    } catch (e) {
+        // ignore
+    }
+}
+
 function initCatalog() {
     // Catalog scripts initialized
 
@@ -98,6 +126,8 @@ function initCatalog() {
 
                 // Инициализируем слайдеры
                 setTimeout(initProductSliders, 100);
+                // Инициализируем ленивую загрузку для новых изображений
+                setTimeout(initLazyLoading, 150);
 
                 // Скрываем индикатор загрузки
                 $('.catalogItems').removeClass('loading');
@@ -199,6 +229,13 @@ function initCatalog() {
 
     // Инициализируем слайдеры при загрузке
     requestAnimationFrame(initProductSliders);
+    // Инициализируем ленивую загрузку
+    initLazyLoading();
+
+    // Ленивая загрузка для новых товаров после AJAX
+    $(document).on('ajaxComplete', function() {
+        setTimeout(initLazyLoading, 100);
+    });
 
         // 🔴 ОБРАБОТЧИКИ ФИЛЬТРОВ
         $(".clearFilterBtn").on('click', function (e) {

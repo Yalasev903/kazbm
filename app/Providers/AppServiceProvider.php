@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Session;
 use App\Models\City;
 use Illuminate\Support\Facades\Blade;
 use Intervention\Image\ImageManagerStatic as Image;
+use App\Models\Product;
+use Illuminate\Support\Facades\Cache;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,6 +33,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(GeneralSettings $generalSettings): void
     {
+
+            // Очистка кэша при изменении товаров
+        Product::saved(function ($product) {
+            Cache::flush();
+        });
+
+        Category::saved(function ($category) {
+            Cache::flush();
+        });
+
         if (!function_exists('getWebpPath')) {
             function getWebpPath($originalPath) {
                 // Если путь уже абсолютный URL
