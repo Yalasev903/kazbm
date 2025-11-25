@@ -295,6 +295,24 @@ body.preload-state #app {
         @endif
     @endif
 
+    <!-- Schema.org разметка ТОЛЬКО для фронтенда -->
+    @if(!request()->is('admin*') && !request()->is('filament*'))
+        @if($isOblicSection ?? false)
+            {{-- Для ОБЛИЦОВОЧНОГО кирпича --}}
+            {!! generate_schema_oblic_organization() !!}
+            @if(View::hasSection('schema'))
+                @yield('schema')
+            @endif
+        @else
+            {{-- Для ГИПЕРПРЕССОВАННОГО кирпича --}}
+            {!! generate_schema_organization() !!}
+            {!! generate_schema_local_business() !!}
+            @if(View::hasSection('schema'))
+                @yield('schema')
+            @endif
+        @endif
+    @endif
+
     <!-- АСИНХРОННАЯ загрузка CSS с сохранением порядка -->
 <link rel="preload" href="{{ asset('css/style.css?v='. time()) }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="{{ asset('css/dep.min.css?v='. time()) }}" as="style" onload="this.onload=null;this.rel='stylesheet'">

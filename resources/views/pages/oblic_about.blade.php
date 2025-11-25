@@ -3,11 +3,37 @@
 @section('seo_title', (strlen($page->seo_title) > 1 ? $page->seo_title : ''))
 @section('meta_keywords',(strlen($page->meta_keywords) > 1 ? $page->meta_keywords : ''))
 @section('meta_description', (strlen($page->meta_description) > 1 ? $page->meta_description : ''))
+
+@section('schema')
+    @php
+        $parents = [
+            [
+                'name' => 'Облицовочный кирпич',
+                'url' => city_route('oblic.city')
+            ],
+            [
+                'name' => 'О компании',
+                'url' => city_route('oblic.about.city')
+            ]
+        ];
+    @endphp
+    {!! generate_schema_breadcrumbs('О компании', $parents) !!}
+    {!! generate_schema_oblic_business([]) !!}
+@endsection
+
 @section('content')
     <main class="aboutPage">
         <div id="left"><img src="{{ asset('images/icons/about_p.svg') }}"></div>
         <div class="container">
-            @include('components.breadcrumbs')
+            @php
+                $breadcrumbParents = [
+                    [
+                        'name' => 'Облицовочный кирпич',
+                        'url' => city_route('oblic.city')
+                    ]
+                ];
+            @endphp
+            @include('components.breadcrumbs', ['parents' => $breadcrumbParents, 'title' => $page->title])
 
             @if($bannerSettings->{'title_' . App::getLocale()})
                 <div class="banner">

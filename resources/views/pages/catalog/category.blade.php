@@ -1,5 +1,7 @@
 @extends('layouts.app')
-
+@section('schema')
+    {!! generate_schema_breadcrumbs($category->name['ru'] ?? $category->name) !!}
+@endsection
 @section('content')
     <main class="catalogPage">
         <div class="container">

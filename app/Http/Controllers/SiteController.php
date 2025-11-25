@@ -367,22 +367,16 @@ private function getParamsByPage($page, $request)
             $articles = (new Article)->getList();
             return compact('articles');
         case 'oblicovochnyy-kirpich':
-            // Находим категорию "Облицовочный кирпич"
             $oblicCategory = Category::where('slug', 'oblicovochnyy-kirpich')->first();
-
+            $products = collect();
             if ($oblicCategory) {
-                // Только товары из категории "Облицовочный кирпич"
                 $products = Product::query()
-                    ->select(['title', 'photo', 'price', 'size_id', 'color_id', 'category_id', 'data', 'slug'])
                     ->where('category_id', $oblicCategory->id)
                     ->where('stock', '<>', 0)
                     ->where('status', true)
-                    ->orderBy('created_at', 'desc') // Новые первыми
+                    ->orderBy('created_at', 'desc')
                     ->get();
-            } else {
-                $products = collect(); // Пустая коллекция если категория не найдена
             }
-
             return [
                 'articles' => (new Article)->getPopular(),
                 'products' => $products
@@ -399,8 +393,22 @@ private function getParamsByPage($page, $request)
                 'advantageSettings' => app(\App\Filament\Settings\OblicAdvantageSettings::class),
             ];
                     case 'oblicovochnyy-kirpich/our-products':
+            // Выбираем продукты для раздела "Наша продукция" облицовочного кирпича
+            $oblicCategory = Category::where('slug', 'oblicovochnyy-kirpich')->first();
+            $products = collect();
+            if ($oblicCategory) {
+                $products = Product::query()
+                    ->select(['title', 'photo', 'price', 'size_id', 'color_id', 'category_id', 'data', 'slug'])
+                    ->where('category_id', $oblicCategory->id)
+                    ->where('stock', '<>', 0)
+                    ->where('status', true)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+            }
+
             return [
                 'ourProductSettings' => app(\App\Filament\Settings\OurProductSettings::class),
+                'products' => $products
             ];
         case 'oblicovochnyy-kirpich/catalog':
             $oblicCategory = Category::where('slug', 'oblicovochnyy-kirpich')->first();

@@ -1,18 +1,71 @@
 @extends('layouts.app')
+@php
+    $category = $product->category;
+    $isOblicCategory = $category->slug === 'oblicovochnyy-kirpich';
+
+    if ($isOblicCategory) {
+        $breadcrumbParents = [
+            [
+                'name' => 'Облицовочный кирпич',
+                'url' => city_route('oblic.city')
+            ],
+            [
+                'name' => $category->name,
+                'url' => city_route('oblic.category.city.show')
+            ]
+        ];
+    } else {
+        $breadcrumbParents = [
+            [
+                'name' => 'Каталог',
+                'url' => city_route('pages.city.get', ['slug' => 'catalog'])
+            ],
+            [
+                'name' => $category->name,
+                'url' => city_route('category.city.show', ['slug' => $category->slug])
+            ]
+        ];
+    }
+@endphp
 @section('page_title',(strlen($product->title) > 1 ? $product->title : ''))
 @section('seo_title', (strlen($product->seo_title) > 1 ? $product->seo_title : ''))
 @section('meta_keywords',(strlen($product->meta_keywords) > 1 ? $product->meta_keywords : ''))
 @section('meta_description', (strlen($product->meta_description) > 1 ? $product->meta_description : ''))
+@section('schema')
+    {!! generate_schema_product($product) !!}
+    @php
+        if ($isOblicCategory) {
+            $schemaParents = [
+                [
+                    'name' => 'Облицовочный кирпич',
+                    'url' => city_route('oblic.city')
+                ],
+                [
+                    'name' => $category->name,
+                    'url' => city_route('oblic.category.city.show')
+                ]
+            ];
+        } else {
+            $schemaParents = [
+                [
+                    'name' => 'Каталог',
+                    'url' => city_route('pages.city.get', ['slug' => 'catalog'])
+                ],
+                [
+                    'name' => $category->name,
+                    'url' => city_route('category.city.show', ['slug' => $category->slug])
+                ]
+            ];
+        }
+    @endphp
+    {!! generate_schema_breadcrumbs($product->title['ru'] ?? $product->title, $schemaParents) !!}
+@endsection
 @section('content')
     <main class="productPage">
         <div class="container">
-            @php($category = $product->category)
             @include('components.breadcrumbs', [
                 'title' => $product->title,
-                'parents' => [
-                    'Каталог' => city_route('pages.city.get', ['slug' => 'catalog']),
-                    $category->name => city_route('category.city.show', ['slug' => $category->slug]),
-                ]
+                'parents' => $breadcrumbParents
             ])
             <div class="block1">
                 <div class="left">

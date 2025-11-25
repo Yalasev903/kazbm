@@ -3,11 +3,30 @@
 @section('seo_title', $page->seo_title)
 @section('meta_keywords', $page->meta_keywords)
 @section('meta_description', $page->meta_description)
-
+@section('schema')
+    @php
+        $parents = [
+            [
+                'name' => 'Контакты',
+                'url' => city_route('oblic.contacts.city')
+            ]
+        ];
+    @endphp
+    {!! generate_schema_breadcrumbs('Контакты', $parents) !!}
+    {!! generate_schema_oblic_business([]) !!}
+@endsection
 @section('content')
 <main class="contactsPage">
     <div class="container">
-        @include('components.breadcrumbs')
+               @php
+            $breadcrumbParents = [
+                [
+                    'name' => 'Облицовочный кирпич',
+                    'url' => city_route('oblic.city')
+                ]
+            ];
+        @endphp
+        @include('components.breadcrumbs', ['parents' => $breadcrumbParents, 'title' => $page->title])
 
         {{-- H1 с использованием oblic_h1 --}}
         <div class="titles">

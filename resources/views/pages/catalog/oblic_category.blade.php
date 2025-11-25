@@ -1,20 +1,21 @@
 @php(\Log::debug('category view vars', ['seoTitle' => $seoTitle ?? null, 'seo_title' => $seo_title ?? null]))
 @extends('layouts.app')
-
-{{-- @section('page_title', $page_title)
-@section('seo_title', $seo_title)
-@section('meta_description', $meta_description)
-@section('meta_keywords', $meta_keywords) --}}
+@section('schema')
+    {!! generate_schema_breadcrumbs($category->name['ru'] ?? $category->name, $schemaParents ?? []) !!}
+@endsection
 
 @section('content')
     <main class="catalogPage">
         <div class="container">
     <main class="catalogPage">
         <div class="container">
-            @include('.components.breadcrumbs', [
-                'title' => __($category->name),
-                'parents' => ['Каталог' => city_route('pages.city.get', ['slug' => 'catalog'])]
-            ])
+            <div class="route">
+                <a class="route__older" href="{{ url('/') }}">{{__("Главная")}}</a>
+                <div class="route__slesh">-</div>
+                <a class="route__older" href="{{ city_route('oblic.city') }}">Облицовочный кирпич</a>
+                <div class="route__slesh">-</div>
+                <div class="route__current">{{ __($category->name) }}</div>
+            </div>
             <div class="banner">
                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1380" height="339" viewBox="0 0 1380 339" fill="none">
                     <path d="M0 20C0 8.95431 8.95431 0 20 0H1360C1371.05 0 1380 8.95431 1380 20V319C1380 330.046 1371.05 339 1360 339H477.5C466.454 339 457.5 330.046 457.5 319V251.5C457.5 240.454 448.546 231.5 437.5 231.5H20C8.9543 231.5 0 222.546 0 211.5V20Z" fill="url(#pattern0_279_22100)"></path>

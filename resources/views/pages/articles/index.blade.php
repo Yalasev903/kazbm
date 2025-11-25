@@ -3,6 +3,17 @@
 @section('seo_title', (strlen($page->seo_title) > 1 ? $page->seo_title : ''))
 @section('meta_keywords',(strlen($page->meta_keywords) > 1 ? $page->meta_keywords : ''))
 @section('meta_description', (strlen($page->meta_description) > 1 ? $page->meta_description : ''))
+@section('schema')
+    @php
+        $schemaParents = [
+            [
+                'name' => 'Статьи',
+                'url' => city_route('pages.city.get', ['slug' => 'articles'])
+            ]
+        ];
+    @endphp
+    {!! generate_schema_breadcrumbs(__($page->title), $schemaParents) !!}
+@endsection
 @section('content')
     <main class="articlesPage">
         <div class="container">

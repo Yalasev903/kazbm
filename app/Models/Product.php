@@ -112,4 +112,17 @@ class Product extends Model
 
         return compact('maxPrice', 'products');
     }
-}
+
+    public function getParametersAttribute($value)
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (is_string($value)) {
+            return json_decode($value, true) ?? [];
+        }
+
+        return [];
+    }
+    }

@@ -4,6 +4,18 @@
 @section('oblic_meta_keywords', $seo['seoKeywords'] ?? '')
 @section('oblic_meta_description', $seo['seoDescription'] ?? '')
 
+@section('schema')
+    @php
+        $parents = [
+            [
+                'name' => 'Облицовочный кирпич',
+                'url' => city_route('oblic.city')
+            ]
+        ];
+    @endphp
+    {!! generate_schema_breadcrumbs('Главная', $parents) !!}
+    {!! generate_schema_oblic_business($products ?? []) !!}
+@endsection
 @section('content')
     <main class="homePage">
         <img class="bg" src="{{ asset('images/icons/hpb2_bg.svg') }}" alt="hpb2 icon">
@@ -22,10 +34,6 @@
     $testWebp = getWebpPath($testPath);
     $webpExists = file_exists(public_path($testWebp));
 @endphp
-
-<div style="display: none;">
-    Debug: {{ $testPath }} → {{ $testWebp }} → {{ $webpExists ? 'EXISTS' : 'MISSING' }}
-</div>
                             <x-webp-image
     src="images/hpb5_1.png"
     alt="hpb5_1 image"

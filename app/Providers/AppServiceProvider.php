@@ -33,8 +33,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(GeneralSettings $generalSettings): void
     {
-
-            // Очистка кэша при изменении товаров
+        // Очистка кэша при изменении товаров
         Product::saved(function ($product) {
             Cache::flush();
         });
@@ -94,7 +93,6 @@ class AppServiceProvider extends ServiceProvider
             ->toArray();
 
         View::share('generalSettings', $generalSettings);
-
         View::share('canonicalBase', config('app.url'));
 
         View::composer(['layouts.header'], function ($view) {
@@ -124,18 +122,62 @@ class AppServiceProvider extends ServiceProvider
             $view->with('cities', $cities);
         });
 
-        // Автоматически пинговать при изменении контента
-        // $models = [\App\Models\City::class, \App\Models\Page::class, \App\Models\Category::class, \App\Models\Article::class];
+        // Шарим данные для schema разметки ТОЛЬКО для фронтенда
+        View::composer(['layouts.*', 'pages.*', 'components.*'], function ($view) use ($generalSettings) {
+            // Проверяем, что это не админка Filament
+            if (request()->is('admin*') ||
+                request()->is('filament*') ||
+                (class_exists(\Filament\Facades\Filament::class) && \Filament\Facades\Filament::isServing())) {
+                return;
+            }
 
-        // foreach ($models as $model) {
-        //     $model::saved(function () {
-        //         \Artisan::call('sitemap:generate');
-        //     });
+            $currentCity = app('currentCity');
+            $view->with([
+                'generalSettings' => $generalSettings,
+                'currentCity' => $currentCity
+            ]);
+        });
 
-        //     $model::deleted(function () {
-        //         \Artisan::call('sitemap:generate');
-        //     });
-        // }
+        View::composer('*', function ($view) {
+            // Не выполняем для админских путей
+            if (request()->is('admin*') ||
+                request()->is('filament*') ||
+                (class_exists(\Filament\Facades\Filament::class) && \Filament\Facades\Filament::isServing())) {
+                return;
+            }
+
+            $currentCity = app('currentCity');
+            $isOblicSection = request()->is('*oblicovochnyy-kirpich*') ||
+                            request()->is('*/oblicovochnyy-kirpich*');
+
+            $categories = Category::where('status', true)
+                ->where('slug', '!=', 'oblicovochnyy-kirpich')
+                ->pluck('name', 'slug')
+                ->toArray();
+
+            $oblicCategories = Category::where('status', true)
+                ->where('slug', 'oblicovochnyy-kirpich')
+                ->pluck('name', 'slug')
+                ->toArray();
+
+            $view->with(compact('isOblicSection', 'categories', 'oblicCategories', 'currentCity'));
+        });
+
+        View::composer('pages.catalog.oblic_category', function ($view) {
+            $data = $view->getData();
+            $category = $data['category'] ?? null;
+
+            if ($category) {
+                $schemaParents = [
+                    [
+                        'name' => 'Облицовочный кирпич',
+                        'url' => city_route('oblic.city')
+                    ]
+                ];
+
+                $view->with('schemaParents', $schemaParents);
+            }
+        });
 
         View::composer('*', function ($view) {
             $defaultCity = City::where('is_default', true)->first();
@@ -148,32 +190,34 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('canonicalBase', $canonicalBase);
         });
+
         // Оптимизация конкретных проблемных изображений
         $this->optimizeProblematicImages();
+
         View::composer('*', function ($view) {
-        // Не выполняем для админских путей
-        if (request()->is('admin*') ||
-            request()->is('filament*') ||
-            (class_exists(\Filament\Facades\Filament::class) && \Filament\Facades\Filament::isServing())) {
-            return;
-        }
+            // Не выполняем для админских путей
+            if (request()->is('admin*') ||
+                request()->is('filament*') ||
+                (class_exists(\Filament\Facades\Filament::class) && \Filament\Facades\Filament::isServing())) {
+                return;
+            }
 
-        $currentCity = app('currentCity');
-        $isOblicSection = request()->is('*oblicovochnyy-kirpich*');
+            $currentCity = app('currentCity');
+            $isOblicSection = request()->is('*oblicovochnyy-kirpich*');
 
-        $categories = Category::where('status', true)
-            ->where('slug', '!=', 'oblicovochnyy-kirpich')
-            ->pluck('name', 'slug')
-            ->toArray();
+            $categories = Category::where('status', true)
+                ->where('slug', '!=', 'oblicovochnyy-kirpich')
+                ->pluck('name', 'slug')
+                ->toArray();
 
-        $oblicCategories = Category::where('status', true)
-            ->where('slug', 'oblicovochnyy-kirpich')
-            ->pluck('name', 'slug')
-            ->toArray();
+            $oblicCategories = Category::where('status', true)
+                ->where('slug', 'oblicovochnyy-kirpich')
+                ->pluck('name', 'slug')
+                ->toArray();
 
-        $view->with(compact('isOblicSection', 'categories', 'oblicCategories'));
-    });
-  }
+            $view->with(compact('isOblicSection', 'categories', 'oblicCategories'));
+        });
+    }
 
     /**
      * Оптимизация конкретных больших изображений (приведение к нужным размерам и сжатие).

@@ -9,6 +9,15 @@ if (! function_exists('city_route')) {
         if (request()->is('filament*') || request()->is('admin*')) {
             return route($name, $params);
         }
+
+        // Обработка маршрута 'city'
+        if ($name === 'city') {
+            if ($city && $city->is_default) {
+                return url('/');
+            }
+            return url('/' . $city->slug);
+        }
+
         // Для главной страницы
         if ($name === 'home.city') {
             if ($city && $city->is_default) {
@@ -49,6 +58,22 @@ if (! function_exists('city_route')) {
             return url('/' . $city->slug . '/oblicovochnyy-kirpich/contacts');
         }
 
+        // Для страницы "О компании" гиперпрессованного кирпича
+        if ($name === 'about.city') {
+            if ($city && $city->is_default) {
+                return url('/about');
+            }
+            return url('/' . $city->slug . '/about');
+        }
+
+        // Для страницы контактов гиперпрессованного кирпича
+        if ($name === 'contacts.city') {
+            if ($city && $city->is_default) {
+                return url('/contacts');
+            }
+            return url('/' . $city->slug . '/contacts');
+        }
+
         // Для калькулятора
         if ($name === 'calculator.city') {
             if ($city && $city->is_default) {
@@ -61,7 +86,13 @@ if (! function_exists('city_route')) {
         if ($city && !isset($params['city'])) {
             $params = array_merge(['city' => $city->slug], $params);
         }
-        return route($name, $params);
+
+        try {
+            return route($name, $params);
+        } catch (\Exception $e) {
+            // Fallback на базовый URL
+            return url('/');
+        }
     }
 }
 
@@ -147,5 +178,48 @@ if (! function_exists('getWebpPath')) {
     {
         $pathInfo = pathinfo($originalPath);
         return $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
+    }
+}
+
+if (! function_exists('generate_schema_organization')) {
+    function generate_schema_organization()
+    {
+        return App\Helpers\SchemaHelper::getOrganizationSchema();
+    }
+}
+
+if (! function_exists('generate_schema_product')) {
+    function generate_schema_product($product)
+    {
+        return App\Helpers\SchemaHelper::getProductSchema($product);
+    }
+}
+
+if (! function_exists('generate_schema_breadcrumbs')) {
+    function generate_schema_breadcrumbs($currentPage)
+    {
+        $breadcrumbs = App\Helpers\SchemaHelper::generateBreadcrumbs($currentPage);
+        return view('components.schema-breadcrumb', compact('breadcrumbs'))->render();
+    }
+}
+
+if (! function_exists('generate_schema_local_business')) {
+    function generate_schema_local_business()
+    {
+        return App\Helpers\SchemaHelper::getLocalBusinessSchema();
+    }
+}
+
+if (! function_exists('generate_schema_oblic_business')) {
+    function generate_schema_oblic_business($products = [])
+    {
+        return App\Helpers\SchemaHelper::getOblicBusinessSchema($products);
+    }
+}
+
+if (! function_exists('generate_schema_oblic_organization')) {
+    function generate_schema_oblic_organization()
+    {
+        return App\Helpers\SchemaHelper::getOblicOrganizationSchema();
     }
 }

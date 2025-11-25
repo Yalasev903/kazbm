@@ -3,6 +3,21 @@
 @section('seo_title', (strlen($page->seo_title) > 1 ? $page->seo_title : ''))
 @section('meta_keywords',(strlen($page->meta_keywords) > 1 ? $page->meta_keywords : ''))
 @section('meta_description', (strlen($page->meta_description) > 1 ? $page->meta_description : ''))
+@section('schema')
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "{{ $generalSettings->site_name }}",
+    "url": "{{ config('app.url') }}",
+    "potentialAction": {
+        "@type": "SearchAction",
+        "target": "{{ config('app.url') }}/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+    }
+}
+</script>
+@endsection
 @section('content')
     <main class="homePage">
         <img class="bg" src="{{ asset('images/icons/hpb2_bg.svg') }}" alt="hpb2 icon">
