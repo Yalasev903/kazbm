@@ -332,15 +332,36 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const citySlug = link.getAttribute('data-city');
 
+            // Получаем CSRF токен динамически из meta тега
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            if (!csrfToken) {
+                console.error('CSRF token not found');
+                alert('Ошибка: не найден CSRF токен. Попробуйте обновить страницу.');
+                return;
+            }
+
             fetch('{{ route("set.city") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': csrfToken
                 },
                 body: JSON.stringify({ city: citySlug })
             })
-            .then(response => response.json())
+            .then(response => {
+                // Обработка ошибки 419 (CSRF token mismatch / session expired)
+                if (response.status === 419) {
+                    if (confirm('Сессия истекла. Обновить страницу для выбора города?')) {
+                        window.location.reload();
+                    }
+                    throw new Error('Session expired');
+                }
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     cityModal.style.display = 'none';
