@@ -9,13 +9,13 @@ class OblicAboutBannerSettings extends Settings
 {
     use ImageUpload;
 
-    public string $title_ru;
-    public string $title_kk;
-    public string $photo;
-    public string $sub_title;
-    public string $desc_ru;
-    public string $desc_kk;
-    public string $bg_image;
+    public ?string $title_ru = null;
+    public ?string $title_kk = null;
+    public ?string $photo = null;
+    public ?string $sub_title = null;
+    public ?string $desc_ru = null;
+    public ?string $desc_kk = null;
+    public ?string $bg_image = null;
 
     public static function group(): string
     {

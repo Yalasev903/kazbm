@@ -61,7 +61,7 @@ class Common
     public static function getWebpByImage(string $path): string
     {
         $webpImage = (strpos($path,'svg') === false) ? str_replace('.' . pathinfo($path, PATHINFO_EXTENSION), '.webp', $path) : '';
-        return file_exists(asset('storage/'. $webpImage)) ? $webpImage : '';
+        return file_exists(public_path('storage/'. $webpImage)) ? $webpImage : '';
     }
 
     public static function getDateToString(string $date): string

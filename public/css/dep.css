@@ -819,9 +819,9 @@
 }
 
 .aboutPage .min-container .block4 .right .btn {
-  position: absolute;
-  bottom: 0;
-  right: 0;
+  position: relative;
+  margin-top: 20px;
+  margin-left: auto;
   width: 265px;
   height: 50px;
   border-radius: 10px;

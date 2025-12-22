@@ -98,6 +98,9 @@
                 </div>
             </div>
         </div>
+        <div class="footer_map" style="width: 100%; height: 400px; margin-bottom: 20px;">
+            <x-google-map />
+        </div>
         <div class="footer_bottom">
             <a class="confidence" href="{{ city_route('pages.city.get', ['slug' => 'privacy-policy']) }}">{{__("Политика конфиденциальности")}}</a>
             <div class="privacy">{{__("Все права защищены")}}</div>

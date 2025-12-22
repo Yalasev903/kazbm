@@ -31,21 +31,24 @@
 
             {{-- <div class="titles">{{ $page->sub_title ?: $page->title }}</div> --}}
             <div class="titles">{{ $mainTitle }}</div>
-            @php $ourProductSettings = app(\App\Filament\Settings\OurProductSettings::class) @endphp
+            @php
+                $ourProductContent = \App\Services\CityContentService::getOurProductContent();
+            @endphp
+            <div class="banner">
                 <x-webp-image
-                    src="{{ $ourProductSettings->getRealFormat('hero_image') }}"
-                    class="banner"
+                    src="{{ $ourProductContent['hero_image'] ?? '' }}"
                     alt="hero image"
                     :lazy="true"
                 />
-            <div class="banner_title">{{ $ourProductSettings->hero_desc }}</div>
+            </div>
+            <div class="banner_title">{{ $ourProductContent['hero_desc'] ?? '' }}</div>
             <div class="block2">
-                <div class="title">{{ $ourProductSettings->feature_title }}</div>
+                <div class="title">{{ $ourProductContent['feature_title'] ?? '' }}</div>
                 <div class="block2_box">
-                    <div class="left">{!! $ourProductSettings->feature_desc !!}</div>
+                    <div class="left">{!! $ourProductContent['feature_desc'] ?? '' !!}</div>
                     <div class="right">
                  <x-webp-image
-                    src="{{ $ourProductSettings->getRealFormat('feature_photo') }}"
+                    src="{{ $ourProductContent['feature_photo'] ?? '' }}"
                     alt="feature image"
                     :lazy="true"
                 />
@@ -56,12 +59,12 @@
                 </div>
             </div>
             <div class="block3">
-                <div class="title">{{ $ourProductSettings->reason_title }}</div>
-                {!! $ourProductSettings->reason_desc !!}
+                <div class="title">{{ $ourProductContent['reason_title'] ?? '' }}</div>
+                {!! $ourProductContent['reason_desc'] ?? '' !!}
             </div>
             <div class="block4">
                 <div class="title">Выводы</div>
-                <div class="desc"><p>{{ $ourProductSettings->conclusion_text }}</p></div>
+                <div class="desc"><p>{{ $ourProductContent['conclusion_text'] ?? '' }}</p></div>
             </div>
             @include('layouts.footer')
         </div>

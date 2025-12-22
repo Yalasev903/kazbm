@@ -9,11 +9,11 @@ class OblicAboutProductSettings extends Settings
 {
     use ImageUpload;
 
-    public string $title;
-    public string $description;
-    public string $photo;
-    public string $item_photo;
-    public array $items;
+    public ?string $title = null;
+    public ?string $description = null;
+    public ?string $photo = null;
+    public ?string $item_photo = null;
+    public ?array $items = [];
     
 
     public static function group(): string

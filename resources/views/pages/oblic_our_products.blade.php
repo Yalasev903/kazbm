@@ -38,45 +38,46 @@
                     $mainTitle .= ' ' . $cityH1;
                 }
 
-                // Используем правильные настройки для облицовочного кирпича
-                $oblicOurProductSettings = app(\App\Filament\Settings\OblicOurProductSettings::class);
+                // Используем CityContentService для получения контента с учётом города
+                $oblicOurProductContent = \App\Services\CityContentService::getOblicOurProductContent();
             @endphp
 
             <div class="titles">{{ $h1 ?? $page->title  }}</div>
 
-            <x-webp-image
-                src="{{ $oblicOurProductSettings->getRealFormat('hero_image') }}"
-                alt="hero image"
-                class="banner"
-                :lazy="true"
-            />
-            <div class="banner_title">{{ $oblicOurProductSettings->hero_desc }}</div>
+            <div class="banner">
+                <x-webp-image
+                    src="{{ $oblicOurProductContent['hero_image'] ?? '' }}"
+                    alt="hero image"
+                    :lazy="true"
+                />
+            </div>
+            <div class="banner_title">{{ $oblicOurProductContent['hero_desc'] ?? '' }}</div>
 
             <div class="block2">
-                <div class="title">{{ $oblicOurProductSettings->feature_title }}</div>
+                <div class="title">{{ $oblicOurProductContent['feature_title'] ?? '' }}</div>
                 <div class="block2_box">
-                    <div class="left">{!! $oblicOurProductSettings->feature_desc !!}</div>
+                    <div class="left">{!! $oblicOurProductContent['feature_desc'] ?? '' !!}</div>
                     <div class="right">
                         <x-webp-image
-                            src="{{ $oblicOurProductSettings->getRealFormat('feature_photo') }}"
+                            src="{{ $oblicOurProductContent['feature_photo'] ?? '' }}"
                             alt="feature image"
                             :lazy="true"
                         />
                     </div>
                 </div>
-                <div class="desc">
-                    <p>Отформованные детали просушивают в пропарочном оборудовании на протяжении 10 часов либо в условиях склада, где кирпич сохраняет свои свойства на протяжении пяти дней. Наибольшую прочность материал получает в течение месяца при условии положительной температуры.</p>
-                </div>
+            <div class="desc">
+                <p>{{ $oblicOurProductContent['process_desc'] ?? 'Отформованные детали просушивают в пропарочном оборудовании на протяжении 10 часов либо в условиях склада, где кирпич сохраняет свои свойства на протяжении пяти дней. Наибольшую прочность материал получает в течение месяца при условии положительной температуры.' }}</p>
             </div>
+        </div>
 
             <div class="block3">
-                <div class="title">{{ $oblicOurProductSettings->reason_title }}</div>
-                {!! $oblicOurProductSettings->reason_desc !!}
+                <div class="title">{{ $oblicOurProductContent['reason_title'] ?? '' }}</div>
+                {!! $oblicOurProductContent['reason_desc'] ?? '' !!}
             </div>
 
             <div class="block4">
                 <div class="title">Выводы</div>
-                <div class="desc"><p>{{ $oblicOurProductSettings->conclusion_text }}</p></div>
+                <div class="desc"><p>{{ $oblicOurProductContent['conclusion_text'] ?? '' }}</p></div>
             </div>
 
             @include('layouts.footer')

@@ -57,10 +57,10 @@
             </div>
         </div>
 
-        <div class="contact">
-            @if($map_link = $generalSettings->map_link)
-                <iframe class="map" src="{{$map_link}}" width="100%" height="400" style="border:none"></iframe>
-            @endif
+            <div class="contact">
+                <div style="width: 100%; height: 400px; margin-bottom: 20px;">
+                    <x-google-map />
+                </div>
 
             <div class="form">
                 <div class="title">{{ __("Свяжитесь с нами!") }}</div>

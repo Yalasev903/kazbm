@@ -1,5 +1,8 @@
-@php $advantageSettings = app(\App\Filament\Settings\AdvantageSettings::class) @endphp
-@if($items = $advantageSettings->items)
+@php
+    $advantageContent = \App\Services\CityContentService::getAdvantageContent();
+    $items = $advantageContent['items'] ?? [];
+@endphp
+@if($items)
     <div class="block4">
         <div class="left">
             <div class="head">

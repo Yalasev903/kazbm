@@ -26,8 +26,9 @@
             @include('components.blocks.calculator', ['icon_name' => 'home_w'])
             @include('components.blocks.oblic_advantage')
             <div class="block5">
-                @php $productSettings = app(\App\Filament\Settings\About\ProductSettings::class) @endphp
-                @if($productSettings->title)
+
+                @php $productContent = \App\Services\CityContentService::getOblicAboutProductContent(); @endphp
+                @if($productContent['title'] ?? null)
                     <div class="block5_row1">
                         @php
     $testPath = 'images/hpb5_1.png';
@@ -35,7 +36,7 @@
     $webpExists = file_exists(public_path($testWebp));
 @endphp
                             <x-webp-image
-    src="images/hpb5_1.png"
+    src="{{ $productContent['photo'] ?? 'images/hpb5_1.png' }}"
     alt="hpb5_1 image"
     class="optimized-image"
     :width="542"
@@ -44,9 +45,9 @@
 />
 
                         <div class="right">
-                            <div class="titles">{{__("О компании kazbm")}}</div>
+                            <div class="titles">{{ $productContent['title'] ?? __("О компании kazbm") }}</div>
                             <div class="subTitle">{{ __("Наша Продукция")}}</div>
-                            <div class="desc">{{__("Облицовочный кирпич от ТОО “KAZBM” — это высококачественный, долговечный и эстетически привлекательный строительный материал, идеально подходящий для современного строительства.") }}</div>
+                            <div class="desc">{{ $productContent['description'] ?? __("Облицовочный кирпич от ТОО “KAZBM” — это высококачественный, долговечный и эстетически привлекательный строительный материал, идеально подходящий для современного строительства.") }}</div>
                         </div>
                     </div>
                 @endif
@@ -58,25 +59,16 @@
                 />
                 <div class="block5_row2">
                     <div class="left">
-                        @php $advantageSettings = app(\App\Filament\Settings\About\AdvantageSettings::class) @endphp
-                        <div class="item">
-                            <div class="title">{{ __("Высочайшая прочность")}} </div>
-                            <div class="desc">{{ __("За счет наличия цемента и высокого давления при производстве. При таких условиях, по сути, происходит склеивание частиц, а сам процесс нередко называют холодной сваркой. Прочность колеблется в пределах М100-М400.")}} </div>
-                        </div>
-
-                        <div class="item">
-                            <div class="title">{{ __("Низкое влагопоглащение")}} </div>
-                            <div class="desc">{{ __("Высокая плотность обеспечивает этот вид кирпича не только высокой термостойкостью, но и отличной устойчивостью к внешним факторам, таким как дождь и различные химические растворы, что делает из него превосходный вариант для использования вне помещений;")}} </div>
-                        </div>
-
-                        <div class="item">
-                            <div class="title">{{ __("Морозостойкость")}} </div>
-                            <div class="desc">{{ __("Показатель морозостойкости – F-150. Это означает способность выдерживать 150 циклов замораживания-оттаивания. В средней полосе России это означает примерно 30 лет без признаков разрушения. То есть, такой кирпич в буквальном смысле слова будет как новый в течение 30 лет, и только по прошествии этого времени начнут появляться первые признаки разрушения.")}} </div>
-                        </div>
-                        <div class="item">
-                            <div class="title">{{ __("Широкий ассортимент цветов")}} </div>
-                            <div class="desc">{{ __("В настоящее время мы предлагаем четыре цветовые палитры для гиперпрессованного кирпича, однако мы готовы напечатать кирпич в любом цвете по Вашему запросу.")}} </div>
-                        </div>
+                        @php
+                            $advantageContent = \App\Services\CityContentService::getOblicAdvantageContent();
+                            $items = $advantageContent['items'] ?? [];
+                        @endphp
+                        @foreach($items as $item)
+                            <div class="item">
+                                <div class="title">{{ app()->getLocale() == 'kk' ? ($item['title_kk'] ?? $item['title_ru']) : $item['title_ru'] }}</div>
+                                <div class="desc">{{ app()->getLocale() == 'kk' ? ($item['desc_kk'] ?? $item['desc_ru']) : $item['desc_ru'] }}</div>
+                            </div>
+                        @endforeach
                     </div>
                     <div class="right">
                                                 <x-webp-image
@@ -87,11 +79,7 @@
                             :height="173"
                             :lazy="true"
                         />
-                        <a class="btn" href="{{ city_route('pages.city.get', [
-                            'city' => app()->get('currentCity')->slug ?? session('current_city_slug'),
-                            'slug' => 'oblicovochnyy-kirpich/about'
-                        ]) }}">{{__("Узнать больше")}}/
-                        </a>
+                        <a class="btn" href="{{ city_route('pages.city.get', ['city' => app()->get('currentCity')->slug ?? session('current_city_slug'), 'slug' => 'oblicovochnyy-kirpich/about']) }}">{{ __("Узнать больше") }}</a>
                     </div>
                 </div>
             </div>
