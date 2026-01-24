@@ -49,7 +49,16 @@ class Common
 
     public static function getImage(?string $path): string
     {
-        return $path ? Storage::url($path) : '';
+        if (!$path) {
+            return '';
+        }
+
+        // Если это уже полный URL (http/https) или путь уже содержит /storage/
+        if (str_starts_with($path, 'http') || str_starts_with($path, '/storage/')) {
+            return $path;
+        }
+
+        return Storage::url($path);
     }
 
     public static function getVideoPoster(?string $path): string

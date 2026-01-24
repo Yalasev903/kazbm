@@ -279,7 +279,6 @@ class OrderController extends CartController
 
         return response()->json(['status' => 'ignored']);
     }
-}
 
     protected function createInvoice(int $orderId)
     {

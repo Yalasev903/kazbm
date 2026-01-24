@@ -81,7 +81,7 @@
                 <div class="text">{{ $generalSettings->phone }}</div>
             </a>
             <div class="btn" onclick="showModal(1)">{{__("Заказать звонок")}}</div>
-            <div class="extraIcon" onclick="openCustomModal()">
+            <div class="extraIcon">
                 {{-- <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24">
                     <path d="m12,16.791l4.949-4.841c1.322-1.322,2.051-3.08,2.051-4.95s-.729-3.627-2.051-4.95c-1.321-1.322-3.079-2.05-4.949-2.05s-3.628.728-4.95,2.05c-2.729,2.729-2.729,7.17.004,9.903l4.946,4.837ZM7.757,2.757c1.134-1.133,2.641-1.757,4.243-1.757s3.109.624,4.242,1.757c1.134,1.133,1.758,2.64,1.758,4.243s-.624,3.109-1.754,4.239l-4.246,4.154-4.243-4.15c-2.339-2.339-2.339-6.146,0-8.485Zm4.243,7.223c1.648,0,2.99-1.341,2.99-2.99s-1.342-2.99-2.99-2.99-2.99,1.341-2.99,2.99,1.342,2.99,2.99,2.99Zm0-4.98c1.098,0,1.99.893,1.99,1.99s-.893,1.99-1.99,1.99-1.99-.893-1.99-1.99.893-1.99,1.99-1.99Zm11.943,11.846l-11.943,7.166L.057,16.846l5.664-3.398h0l.783.766-4.503,2.632,10,6,10-6-4.482-2.654.761-.744,5.665,3.399Z"/>
                 </svg> --}}
@@ -341,6 +341,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            console.log('Selecting city:', citySlug);
+            console.log('CSRF Token:', csrfToken);
+
             fetch('{{ route("set.city") }}', {
                 method: 'POST',
                 headers: {
@@ -350,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ city: citySlug })
             })
             .then(response => {
+                console.log('Fetch response status:', response.status);
                 // Обработка ошибки 419 (CSRF token mismatch / session expired)
                 if (response.status === 419) {
                     if (confirm('Сессия истекла. Обновить страницу для выбора города?')) {
@@ -358,106 +362,49 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error('Session expired');
                 }
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    throw new Error('Network response was not ok: ' + response.status);
                 }
                 return response.json();
             })
             .then(data => {
+                console.log('Fetch response data:', data);
                 if (data.success) {
                     cityModal.style.display = 'none';
 
-                    // Получаем текущий путь
+                    // Получаем текущий путь и параметры
                     let currentPath = window.location.pathname;
                     const currentSearch = window.location.search;
 
-                    console.log('Current path before processing:', currentPath);
-
-                    // Определяем тип страницы
-                    const isHomePage = currentPath === '/' || currentPath === '' ||
-                                     (currentPath.split('/').length === 2 && currentPath.split('/')[1] === '');
-
-                    // Для страниц с городом в URL
-                    const pathParts = currentPath.split('/').filter(part => part !== '');
-                    const hasCityInPath = pathParts.length > 0 &&
-                                        !['oblicovochnyy-kirpich', 'about', 'our-products', 'contacts',
-                                          'catalog', 'articles', 'calculator'].includes(pathParts[0]);
-
-                    const currentCityInPath = hasCityInPath ? pathParts[0] : null;
-
-                    // Определяем oblic страницы
-                    const isOblicPage = currentPath.includes('oblicovochnyy-kirpich');
-                    const isOblicAboutPage = currentPath.includes('oblicovochnyy-kirpich/about');
-                    const isOblicOurProductsPage = currentPath.includes('oblicovochnyy-kirpich/our-products');
-                    const isOblicContactsPage = currentPath.includes('oblicovochnyy-kirpich/contacts');
-
-                    console.log('Page detection:', {
-                        isHomePage,
-                        hasCityInPath,
-                        currentCityInPath,
-                        isOblicPage,
-                        isOblicAboutPage,
-                        isOblicOurProductsPage,
-                        isOblicContactsPage
-                    });
-
-                    // Удаляем текущий город из пути, если он есть
-                    if (hasCityInPath && currentCityInPath) {
-                        currentPath = currentPath.replace('/' + currentCityInPath, '');
-                        if (currentPath === '') currentPath = '/';
+                    // Список сегментов пути
+                    let pathSegments = currentPath.split('/').filter(segment => segment !== '');
+                    
+                    // Список всех городов для проверки
+                    const citySlugs = @json($cities->pluck('slug'));
+                    
+                    // Проверяем, является ли первый сегмент существующим городом
+                    let hasCityInPath = pathSegments.length > 0 && citySlugs.includes(pathSegments[0]);
+                    
+                    // Если в пути был город, удаляем его
+                    if (hasCityInPath) {
+                        pathSegments.shift();
                     }
 
-                    console.log('Path after city removal:', currentPath);
-
                     // Формируем новый путь
-                    let newPath;
-
-                    if (isHomePage) {
-                        // Главная страница
-                        if (data.is_default) {
-                            newPath = '/';
-                        } else {
-                            newPath = '/' + citySlug;
-                        }
-                    } else if (isOblicAboutPage) {
-                        // Страница "О компании" облицовочного кирпича
-                        if (data.is_default) {
-                            newPath = '/oblicovochnyy-kirpich/about';
-                        } else {
-                            newPath = '/' + citySlug + '/oblicovochnyy-kirpich/about';
-                        }
-                    } else if (isOblicOurProductsPage) {
-                        // Страница "Наша продукция" облицовочного кирпича
-                        if (data.is_default) {
-                            newPath = '/oblicovochnyy-kirpich/our-products';
-                        } else {
-                            newPath = '/' + citySlug + '/oblicovochnyy-kirpich/our-products';
-                        }
-                    } else if (isOblicContactsPage) {
-                        // Страница контактов облицовочного кирпича
-                        if (data.is_default) {
-                            newPath = '/oblicovochnyy-kirpich/contacts';
-                        } else {
-                            newPath = '/' + citySlug + '/oblicovochnyy-kirpich/contacts';
-                        }
-                    } else if (isOblicPage) {
-                        // Главная страница облицовочного кирпича
-                        if (data.is_default) {
-                            newPath = '/oblicovochnyy-kirpich';
-                        } else {
-                            newPath = '/' + citySlug + '/oblicovochnyy-kirpich';
-                        }
-                    } else {
-                        // Все остальные страницы
-                        if (data.is_default) {
-                            newPath = currentPath;
-                        } else {
-                            newPath = '/' + citySlug + currentPath;
-                        }
+                    let newPath = '';
+                    
+                    // Если выбран не дефолтный город, добавляем его в начало
+                    if (!data.is_default) {
+                        newPath += '/' + citySlug;
+                    }
+                    
+                    // Добавляем остальные сегменты
+                    if (pathSegments.length > 0) {
+                        newPath += '/' + pathSegments.join('/');
+                    } else if (newPath === '') {
+                        newPath = '/';
                     }
 
                     console.log('Redirecting to:', newPath + currentSearch);
-
-                    // Переходим на новый URL
                     window.location.href = newPath + currentSearch;
                 } else {
                     alert('Ошибка при выборе города');

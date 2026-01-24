@@ -47,7 +47,7 @@ use Illuminate\Support\Facades\Http;
 //     return \App\Models\City::all()->pluck('slug', 'id');
 // });
 
-Route::post('/set-city', [SiteController::class, 'setCity'])->name('set.city');
+Route::post('/set-city', [SiteController::class, 'setCity'])->middleware('web')->name('set.city');
 
 Route::prefix('ajax')
     ->name('ajax.')
@@ -190,6 +190,9 @@ Route::get('/', function () {
     $footerCity = City::where('slug', 'pavlodar')->first() ?? $defaultCity;
     app()->instance('footerCity', $footerCity);
     view()->share('footerCity', $footerCity);
+
+    // Генерируем CSRF токен для сессии
+    $csrf = csrf_token();
 
     return app(\App\Http\Controllers\SiteController::class)->getPage(request(), '/');
 });

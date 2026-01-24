@@ -131,7 +131,7 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
-            $currentCity = app('currentCity');
+            $currentCity = app()->bound('currentCity') ? app('currentCity') : null;
             $view->with([
                 'generalSettings' => $generalSettings,
                 'currentCity' => $currentCity
@@ -146,7 +146,7 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
-            $currentCity = app('currentCity');
+            $currentCity = app()->bound('currentCity') ? app('currentCity') : null;
             $isOblicSection = request()->is('*oblicovochnyy-kirpich*') ||
                             request()->is('*/oblicovochnyy-kirpich*');
 
@@ -194,29 +194,7 @@ class AppServiceProvider extends ServiceProvider
         // Оптимизация конкретных проблемных изображений
         $this->optimizeProblematicImages();
 
-        View::composer('*', function ($view) {
-            // Не выполняем для админских путей
-            if (request()->is('admin*') ||
-                request()->is('filament*') ||
-                (class_exists(\Filament\Facades\Filament::class) && \Filament\Facades\Filament::isServing())) {
-                return;
-            }
 
-            $currentCity = app('currentCity');
-            $isOblicSection = request()->is('*oblicovochnyy-kirpich*');
-
-            $categories = Category::where('status', true)
-                ->where('slug', '!=', 'oblicovochnyy-kirpich')
-                ->pluck('name', 'slug')
-                ->toArray();
-
-            $oblicCategories = Category::where('status', true)
-                ->where('slug', 'oblicovochnyy-kirpich')
-                ->pluck('name', 'slug')
-                ->toArray();
-
-            $view->with(compact('isOblicSection', 'categories', 'oblicCategories'));
-        });
     }
 
     /**

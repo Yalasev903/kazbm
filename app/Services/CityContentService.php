@@ -70,6 +70,13 @@ class CityContentService
             return $cityContent;
         }
 
+        // Fallback to about_advantage
+        $aboutContent = static::getContent('about_advantage', $cityId);
+        if ($aboutContent && isset($aboutContent['items'])) {
+            $aboutContent['items'] = static::processItemsImages($aboutContent['items'], ['image', 'small_image']);
+            return $aboutContent;
+        }
+
         $settings = app(\App\Filament\Settings\AdvantageSettings::class);
         return ['items' => static::processItemsImages($settings->items, ['image', 'small_image'])];
     }

@@ -342,10 +342,12 @@ class SiteController extends Controller
         $minutes = 30 * 24 * 60;
         Cookie::queue('selected_city', $city->slug, $minutes);
 
+        \Log::debug('SiteController: setCity', ['city' => $city->slug, 'is_default' => $city->is_default]);
+
         return response()->json([
             'success' => true,
             'city' => $city->name,
-            'is_default' => $city->is_default
+            'is_default' => (bool)$city->is_default
         ]);
     }
 

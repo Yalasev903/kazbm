@@ -3,7 +3,7 @@
 if (! function_exists('city_route')) {
     function city_route($name, $params = [])
     {
-        $city = app('currentCity') ?? null;
+        $city = app()->bound('currentCity') ? app('currentCity') : null;
 
         // Если это Filament/админка, используем обычный route()
         if (request()->is('filament*') || request()->is('admin*')) {
@@ -99,7 +99,7 @@ if (! function_exists('city_route')) {
 if (! function_exists('oblic_contacts_route')) {
     function oblic_contacts_route()
     {
-        $city = app('currentCity') ?? null;
+        $city = app()->bound('currentCity') ? app('currentCity') : null;
 
         if ($city && $city->is_default) {
             return url('/oblicovochnyy-kirpich/contacts');
@@ -112,7 +112,7 @@ if (! function_exists('oblic_contacts_route')) {
 if (! function_exists('oblic_about_route')) {
     function oblic_about_route()
     {
-        $city = app('currentCity') ?? null;
+        $city = app()->bound('currentCity') ? app('currentCity') : null;
 
         if ($city && $city->is_default) {
             return url('/oblicovochnyy-kirpich/about');
@@ -124,7 +124,7 @@ if (! function_exists('oblic_about_route')) {
 if (! function_exists('oblic_our_products_route')) {
     function oblic_our_products_route()
     {
-        $city = app('currentCity') ?? null;
+        $city = app()->bound('currentCity') ? app('currentCity') : null;
 
         if ($city && $city->is_default) {
             return url('/oblicovochnyy-kirpich/our-products');

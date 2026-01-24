@@ -46,7 +46,7 @@
 
                         <div class="right">
                             <div class="titles">{{ $productContent['title'] ?? __("О компании kazbm") }}</div>
-                            <div class="subTitle">{{ __("Наша Продукция")}}</div>
+                            <!-- <div class="subTitle">{{ __("Наша Продукция")}}</div> -->
                             <div class="desc">{{ $productContent['description'] ?? __("Облицовочный кирпич от ТОО “KAZBM” — это высококачественный, долговечный и эстетически привлекательный строительный материал, идеально подходящий для современного строительства.") }}</div>
                         </div>
                     </div>

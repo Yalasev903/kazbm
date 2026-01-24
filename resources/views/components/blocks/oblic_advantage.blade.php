@@ -8,7 +8,7 @@
             <div class="head">
                 @foreach($items as $i => $item)
                     <div class="item {{ $i == 0 ? 'active' : '' }}">
-                        @php $image = \App\Helpers\Common::getImage($item['image']) @endphp
+                        @php $image = $item['image'] @endphp
                         <x-webp-image
                             src="{{ $image }}"
                             alt="advantage image{{$i}}"
@@ -58,7 +58,7 @@
 
                 @foreach($items as $i => $item)
                     <div class="item">
-                        @php $small_image = \App\Helpers\Common::getImage($item['small_image']) @endphp
+                        @php $small_image = $item['small_image'] @endphp
                         <x-webp-image
                             src="{{$small_image}}"
                             alt="item icon{{$i}}"

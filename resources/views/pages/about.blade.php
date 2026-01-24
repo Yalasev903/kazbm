@@ -52,7 +52,25 @@
                         </div>
                     </div>
                 @endif
-
+                @php $advantageContent = \App\Services\CityContentService::getAboutAdvantageContent() @endphp
+                @if($advantageItems = $advantageContent['items'] ?? null)
+                    <div class="block3">
+                        <div class="title">{{ __("Наши преимущества") }}</div>
+                        <div class="items">
+                            @foreach($advantageItems as $item)
+                                <div class="item">
+                                    <x-webp-image
+                                        src="{{ $item['image'] }}"
+                                        alt="{{ $item['title'] }}"
+                                        :lazy="true"
+                                    />
+                                    <div class="item_title">{{ $item['title'] }}</div>
+                                    <div class="item_desc">{{ $item['desc'] }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
 
 
                 @php $productContent = \App\Services\CityContentService::getAboutProductContent() @endphp
